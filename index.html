@@ -286,7 +286,7 @@
         // --------- Constants & Config ---------
         const TICK_DEFAULT_MS = 1000;
         const AUTOSAVE_INTERVAL_MS = 30000;
-        const BABY_COOLDOWN_TICKS = 60; // minimum ticks between births
+        const BABY_COOLDOWN_TICKS = 50; // minimum ticks between births
         const EVENT_BASE_CHANCE = 0.04; // base chance per tick to try an event
         const EVENT_COOLDOWN_TICKS = 50; // minimum ticks between events
         const SAVE_KEY = 'colonyIncrementalSave_v2';
@@ -1257,7 +1257,7 @@
             rates.energy = energyProduction - energyDemand;
 
             // food consumption
-            const foodConsumptionPerColonist = 1 * foodConsumptionMult;
+            const foodConsumptionPerColonist = 0.8 * foodConsumptionMult;
             const foodConsumed = state.population * foodConsumptionPerColonist;
             rates.food -= foodConsumed;
 
