@@ -1,0 +1,1842 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Colony Incremental Simulator</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+        html,
+        body {
+            height: 100%;
+        }
+
+        body {
+            background: radial-gradient(circle at top, #020617, #020617 40%, #020617 60%, #000);
+            color: #e5e7eb;
+        }
+
+        .resource-positive {
+            color: #4ade80;
+        }
+
+        .resource-negative {
+            color: #f97373;
+        }
+
+        .btn-disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
+        }
+
+        .log-panel {
+            scrollbar-width: thin;
+        }
+
+        .progress-bar-bg {
+            background: rgba(15, 23, 42, 0.9);
+        }
+
+        .progress-bar-fill {
+            background: linear-gradient(90deg, #22c55e, #22d3ee);
+        }
+
+        .modal-backdrop {
+            background: rgba(15, 23, 42, 0.9);
+        }
+    </style>
+</head>
+
+<body class="min-h-screen text-slate-100">
+    <div class="min-h-screen flex flex-col">
+        <!-- Header -->
+        <header class="border-b border-slate-800 bg-slate-950/80 backdrop-blur sticky top-0 z-20">
+            <div class="max-w-6xl mx-auto px-4 py-3 flex flex-wrap gap-3 items-center justify-between">
+                <div>
+                    <h1 class="text-xl font-semibold tracking-tight">Colony Incremental Simulator</h1>
+                    <p class="text-xs text-slate-400">Grow a fledgling settlement into a civilization-spanning capital.
+                    </p>
+                </div>
+                <div class="flex gap-2 text-xs">
+                    <button id="saveBtn"
+                        class="px-3 py-1 rounded border border-slate-700 bg-slate-900 hover:bg-slate-800 transition">Save</button>
+                    <button id="loadBtn"
+                        class="px-3 py-1 rounded border border-emerald-700 text-emerald-300 bg-emerald-950 hover:bg-emerald-900 transition">Load</button>
+                    <button id="resetBtn"
+                        class="px-3 py-1 rounded border border-rose-700 text-rose-300 bg-rose-950 hover:bg-rose-900 transition">Reset</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Layout -->
+        <main class="flex-1 max-w-6xl mx-auto w-full px-4 py-4 flex flex-col gap-4">
+            <!-- Top: Resources & Colony overview -->
+            <section class="grid md:grid-cols-3 gap-4">
+                <!-- Resources -->
+                <div class="md:col-span-2 border border-slate-800 rounded-lg bg-slate-950/70 p-3">
+                    <h2 class="text-sm font-semibold text-slate-200 mb-2">Resources</h2>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 text-xs">
+                        <div class="border border-slate-800 rounded p-2 bg-slate-900/60">
+                            <div class="flex justify-between items-baseline">
+                                <span class="text-slate-300">Food</span>
+                                <span id="food" class="font-mono">0</span>
+                            </div>
+                            <div class="flex justify-between text-[0.65rem] text-slate-400 mt-1">
+                                <span>Δ/tick</span>
+                                <span id="foodRate" class="font-mono">+0</span>
+                            </div>
+                        </div>
+                        <div class="border border-slate-800 rounded p-2 bg-slate-900/60">
+                            <div class="flex justify-between items-baseline">
+                                <span class="text-slate-300">Wood</span>
+                                <span id="wood" class="font-mono">0</span>
+                            </div>
+                            <div class="flex justify-between text-[0.65rem] text-slate-400 mt-1">
+                                <span>Δ/tick</span>
+                                <span id="woodRate" class="font-mono">+0</span>
+                            </div>
+                        </div>
+                        <div class="border border-slate-800 rounded p-2 bg-slate-900/60">
+                            <div class="flex justify-between items-baseline">
+                                <span class="text-slate-300">Stone</span>
+                                <span id="stone" class="font-mono">0</span>
+                            </div>
+                            <div class="flex justify-between text-[0.65rem] text-slate-400 mt-1">
+                                <span>Δ/tick</span>
+                                <span id="stoneRate" class="font-mono">+0</span>
+                            </div>
+                        </div>
+                        <div class="border border-slate-800 rounded p-2 bg-slate-900/60">
+                            <div class="flex justify-between items-baseline">
+                                <span class="text-slate-300">Metal</span>
+                                <span id="metal" class="font-mono">0</span>
+                            </div>
+                            <div class="flex justify-between text-[0.65rem] text-slate-400 mt-1">
+                                <span>Δ/tick</span>
+                                <span id="metalRate" class="font-mono">+0</span>
+                            </div>
+                        </div>
+                        <div class="border border-slate-800 rounded p-2 bg-slate-900/60">
+                            <div class="flex justify-between items-baseline">
+                                <span class="text-slate-300">Science</span>
+                                <span id="science" class="font-mono">0</span>
+                            </div>
+                            <div class="flex justify-between text-[0.65rem] text-slate-400 mt-1">
+                                <span>Δ/tick</span>
+                                <span id="scienceRate" class="font-mono">+0</span>
+                            </div>
+                        </div>
+                        <div class="border border-slate-800 rounded p-2 bg-slate-900/60">
+                            <div class="flex justify-between items-baseline">
+                                <span class="text-slate-300">Energy</span>
+                                <span id="energy" class="font-mono">0</span>
+                            </div>
+                            <div class="flex justify-between text-[0.65rem] text-slate-400 mt-1">
+                                <span>Δ/tick</span>
+                                <span id="energyRate" class="font-mono">+0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Colony overview -->
+                <div class="border border-slate-800 rounded-lg bg-slate-950/70 p-3 text-xs flex flex-col gap-2">
+                    <h2 class="text-sm font-semibold text-slate-200">Colony Overview</h2>
+                    <div class="flex justify-between items-baseline">
+                        <span class="text-slate-300">Population</span>
+                        <span class="font-mono"><span id="population">0</span>/<span id="populationCap">0</span></span>
+                    </div>
+                    <div class="flex justify-between items-baseline">
+                        <span class="text-slate-300">Unassigned Colonists</span>
+                        <span class="font-mono" id="unassigned">0</span>
+                    </div>
+                    <div class="flex justify-between items-baseline">
+                        <span class="text-slate-300">Happiness</span>
+                        <span class="font-mono" id="happiness">100%</span>
+                    </div>
+                    <div class="flex justify-between items-baseline">
+                        <span class="text-slate-300">Colony Level</span>
+                        <span class="font-mono" id="colonyLevel">1</span>
+                    </div>
+                    <div class="flex justify-between items-baseline">
+                        <span class="text-slate-300">Prestige Runs</span>
+                        <span class="font-mono" id="prestigeCount">0</span>
+                    </div>
+                    <p id="statusMessage" class="text-[0.7rem] text-slate-400 mt-1"></p>
+                </div>
+            </section>
+
+            <!-- Middle: Jobs & Buildings & Research -->
+            <section class="grid md:grid-cols-3 gap-4 text-xs">
+                <!-- Jobs -->
+                <div class="border border-slate-800 rounded-lg bg-slate-950/70 p-3 flex flex-col gap-2">
+                    <h2 class="text-sm font-semibold text-slate-200 mb-1">Jobs</h2>
+                    <p class="text-[0.7rem] text-slate-400 mb-1">Assign colonists. Each colonist consumes 1 Food per
+                        tick. Some jobs improve security or politics instead of resources.</p>
+                    <div id="jobsContainer" class="flex flex-col gap-2"></div>
+                </div>
+
+                <!-- Buildings -->
+                <div class="border border-slate-800 rounded-lg bg-slate-950/70 p-3 flex flex-col gap-2">
+                    <h2 class="text-sm font-semibold text-slate-200 mb-1">Buildings</h2>
+                    <p class="text-[0.7rem] text-slate-400 mb-1">Constructions take time. Stronger infrastructure boosts
+                        capacity, security and energy.</p>
+                    <div id="buildingsContainer" class="flex flex-col gap-2"></div>
+                </div>
+
+                <!-- Research -->
+                <div class="border border-slate-800 rounded-lg bg-slate-950/70 p-3 flex flex-col gap-2">
+                    <h2 class="text-sm font-semibold text-slate-200 mb-1">Research</h2>
+                    <p class="text-[0.7rem] text-slate-400 mb-1">Spend Science to unlock powerful upgrades. Late techs
+                        and the final project require many prestige runs.</p>
+                    <div id="researchContainer" class="flex flex-col gap-2"></div>
+                </div>
+            </section>
+
+            <!-- Bottom: Log, Options, Prestige -->
+            <section class="grid lg:grid-cols-[2fr,1fr,1fr] gap-4 text-xs">
+                <!-- Log -->
+                <div class="border border-slate-800 rounded-lg bg-slate-950/70 p-3 flex flex-col">
+                    <div class="flex items-center justify-between mb-2">
+                        <h2 class="text-sm font-semibold text-slate-200">Colony Log</h2>
+                        <button id="clearLogBtn"
+                            class="text-[0.65rem] text-slate-400 hover:text-slate-200">Clear</button>
+                    </div>
+                    <div id="log"
+                        class="log-panel flex-1 text-[0.7rem] text-slate-300 space-y-0.5 overflow-y-auto max-h-56 pr-1">
+                    </div>
+                </div>
+
+                <!-- Tick & Options -->
+                <div class="border border-slate-800 rounded-lg bg-slate-950/70 p-3 flex flex-col gap-2">
+                    <h2 class="text-sm font-semibold text-slate-200">Tick & Options</h2>
+                    <div class="flex items-center justify-between">
+                        <span class="text-slate-300">Game Speed</span>
+                        <select id="speedSelect"
+                            class="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-[0.7rem]">
+                            <option value="1000">1× (1s/tick)</option>
+                            <option value="500">2× (0.5s/tick)</option>
+                            <option value="250">4× (0.25s/tick)</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-slate-300">Autosave</span>
+                        <span class="text-[0.7rem] text-slate-400">Every 30 seconds</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-slate-300">Ticks Played</span>
+                        <span id="ticks" class="font-mono">0</span>
+                    </div>
+                    <div class="mt-2 border-t border-slate-800 pt-2 text-[0.7rem] text-slate-400">
+                        <p><span class="font-semibold text-slate-200">Energy load:</span> <span
+                                id="energyStatus">Stable</span></p>
+                        <p class="mt-1">High energy coverage boosts all production. Underpowered grids slow everything
+                            down.</p>
+                    </div>
+                </div>
+
+                <!-- Prestige -->
+                <div class="border border-slate-800 rounded-lg bg-slate-950/70 p-3 flex flex-col gap-2">
+                    <h2 class="text-sm font-semibold text-slate-200">Prestige & Meta Progression</h2>
+                    <p class="text-[0.7rem] text-slate-400">Move to a new settlement to gain permanent bonuses. Later
+                        victory is impossible without prestiging many times.</p>
+                    <div class="flex justify-between items-baseline text-[0.7rem]">
+                        <span class="text-slate-300">Prestige Points</span>
+                        <span class="font-mono" id="prestigePoints">0</span>
+                    </div>
+                    <button id="prestigeBtn"
+                        class="mt-1 px-2 py-1 rounded border border-amber-700 text-amber-200 bg-amber-950 hover:bg-amber-900 text-[0.75rem]">Move
+                        to New Settlement (Prestige)</button>
+                    <p id="prestigeHint" class="text-[0.65rem] text-slate-400"></p>
+                    <div class="mt-2 border-t border-slate-800 pt-2">
+                        <h3 class="text-[0.75rem] font-semibold text-slate-200 mb-1">Prestige Upgrades</h3>
+                        <div id="prestigeUpgradesContainer" class="flex flex-col gap-1"></div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Victory Modal -->
+        <div id="victoryModal" class="hidden fixed inset-0 z-30 flex items-center justify-center">
+            <div class="modal-backdrop absolute inset-0"></div>
+            <div
+                class="relative z-40 max-w-md w-full mx-4 p-4 rounded-lg border border-emerald-600 bg-slate-950/95 shadow-xl">
+                <h2 class="text-lg font-semibold text-emerald-300 mb-2">World Capital Founded</h2>
+                <p class="text-xs text-slate-300 mb-2">After countless generations, endless reforms, and many new
+                    settlements, your people have finally unified under a shining capital that anchors the world.</p>
+                <ul class="text-xs text-slate-400 list-disc list-inside mb-3">
+                    <li>All research complete.</li>
+                    <li>Capital Megastructure constructed.</li>
+                    <li>Population exceeds 1000.</li>
+                    <li>At least 5 prestige runs completed.</li>
+                </ul>
+                <p class="text-xs text-slate-400 mb-3">You can keep playing to push your numbers higher, or reset for
+                    even more powerful runs.</p>
+                <div class="flex justify-end gap-2 text-xs">
+                    <button id="victoryCloseBtn"
+                        class="px-3 py-1 rounded border border-slate-700 bg-slate-900 hover:bg-slate-800">Keep
+                        Playing</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --------- Constants & Config ---------
+        const TICK_DEFAULT_MS = 1000;
+        const AUTOSAVE_INTERVAL_MS = 30000;
+        const BABY_COOLDOWN_TICKS = 60; // minimum ticks between births
+        const EVENT_BASE_CHANCE = 0.04; // base chance per tick to try an event
+        const EVENT_COOLDOWN_TICKS = 50; // minimum ticks between events
+        const SAVE_KEY = 'colonyIncrementalSave_v2';
+
+        // --------- Definitions ---------
+        const JOB_DEFS = {
+            farmer: {
+                id: 'farmer',
+                name: 'Farmer',
+                description: 'Produces Food. Essential for supporting population.',
+                baseOutput: { food: 2 },
+            },
+            lumberjack: {
+                id: 'lumberjack',
+                name: 'Lumberjack',
+                description: 'Produces Wood used for basic construction.',
+                baseOutput: { wood: 1.5 },
+            },
+            miner: {
+                id: 'miner',
+                name: 'Miner',
+                description: 'Extracts Stone and small amounts of Metal.',
+                baseOutput: { stone: 1.2, metal: 0.2 },
+            },
+            scientist: {
+                id: 'scientist',
+                name: 'Scientist',
+                description: 'Generates Science for research.',
+                baseOutput: { science: 0.8 },
+            },
+            engineer: {
+                id: 'engineer',
+                name: 'Engineer',
+                description: 'Maintains infrastructure and produces Energy.',
+                baseOutput: { energy: 1.0 },
+            },
+            guard: {
+                id: 'guard',
+                name: 'Guard',
+                description: 'Provides security, reducing crime and horde damage.',
+                baseOutput: {},
+            },
+            politician: {
+                id: 'politician',
+                name: 'Politician',
+                description: 'Shapes policy, reducing war risk and improving diplomacy.',
+                baseOutput: { science: 0.2 },
+            },
+        };
+
+        const BUILDING_DEFS = {
+            tent: {
+                id: 'tent',
+                name: 'Tent',
+                description: 'Basic shelter that increases population capacity by 2.',
+                baseCost: { wood: 10 },
+                buildTimeBase: 8,
+                effects: { populationCap: 2 },
+                unlockAt: 0,
+            },
+            hut: {
+                id: 'hut',
+                name: 'Hut',
+                description: 'Improved housing for 4 colonists.',
+                baseCost: { wood: 35, stone: 10 },
+                buildTimeBase: 14,
+                effects: { populationCap: 4 },
+                unlockAt: 3,
+            },
+            house: {
+                id: 'house',
+                name: 'House',
+                description: 'Sturdy housing for 8 colonists.',
+                baseCost: { wood: 90, stone: 40 },
+                buildTimeBase: 22,
+                effects: { populationCap: 8 },
+                unlockAt: 4,
+            },
+            apartment: {
+                id: 'apartment',
+                name: 'Apartment Block',
+                description: 'Dense housing for 20 colonists.',
+                baseCost: { wood: 260, stone: 180, metal: 50 },
+                buildTimeBase: 40,
+                effects: { populationCap: 20 },
+                unlockAt: 5,
+            },
+            farm: {
+                id: 'farm',
+                name: 'Farm',
+                description: 'Boosts food output of Farmers by 20%.',
+                baseCost: { wood: 25, stone: 5 },
+                buildTimeBase: 12,
+                effects: { farmerMultiplier: 0.2 },
+                unlockAt: 1,
+            },
+            sawmill: {
+                id: 'sawmill',
+                name: 'Sawmill',
+                description: 'Boosts wood output of Lumberjacks by 25%.',
+                baseCost: { wood: 40, stone: 15 },
+                buildTimeBase: 16,
+                effects: { lumberjackMultiplier: 0.25 },
+                unlockAt: 4,
+            },
+            mine: {
+                id: 'mine',
+                name: 'Mine',
+                description: 'Boosts stone and metal output of Miners by 25%.',
+                baseCost: { wood: 60, stone: 25 },
+                buildTimeBase: 18,
+                effects: { minerMultiplier: 0.25 },
+                unlockAt: 5,
+            },
+            lab: {
+                id: 'lab',
+                name: 'Laboratory',
+                description: 'Increases Scientist science output by 30%.',
+                baseCost: { wood: 80, stone: 40, metal: 10 },
+                buildTimeBase: 20,
+                effects: { scientistMultiplier: 0.3 },
+                unlockAt: 6,
+            },
+            generator: {
+                id: 'generator',
+                name: 'Generator',
+                description: 'Produces Energy and improves overall efficiency slightly.',
+                baseCost: { wood: 80, stone: 50, metal: 20 },
+                buildTimeBase: 20,
+                effects: { flatEnergy: 2, globalMultiplier: 0.05 },
+                unlockAt: 7,
+            },
+            powerPlant: {
+                id: 'powerPlant',
+                name: 'Power Plant',
+                description: 'Massive energy production. Keeps the grid stable.',
+                baseCost: { wood: 200, stone: 150, metal: 120 },
+                buildTimeBase: 35,
+                effects: { flatEnergy: 6, globalMultiplier: 0.08 },
+                unlockAt: 8,
+            },
+            barracks: {
+                id: 'barracks',
+                name: 'Barracks',
+                description: 'Improves Guards effectiveness at stopping crime and hordes.',
+                baseCost: { wood: 120, stone: 90, metal: 40 },
+                buildTimeBase: 24,
+                effects: { guardMultiplier: 0.4 },
+                unlockAt: 5,
+            },
+            wall: {
+                id: 'wall',
+                name: 'Fortified Wall',
+                description: 'Greatly reduces damage from raids and hordes.',
+                baseCost: { stone: 160, metal: 60 },
+                buildTimeBase: 28,
+                effects: { securityFlat: 5 },
+                unlockAt: 6,
+            },
+            townHall: {
+                id: 'townHall',
+                name: 'Town Hall',
+                description: 'Supports more Politicians and improves diplomacy.',
+                baseCost: { wood: 140, stone: 90, metal: 40 },
+                buildTimeBase: 26,
+                effects: { politicianMultiplier: 0.4 },
+                unlockAt: 6,
+            },
+            capital: {
+                id: 'capital',
+                name: 'Capital Megastructure',
+                description: 'World-spanning capital. Required for the ultimate victory.',
+                baseCost: { food: 8000, wood: 8000, stone: 8000, metal: 4000, science: 4000, energy: 2000 },
+                buildTimeBase: 160,
+                effects: { globalMultiplier: 0.2 },
+                unlockAt: 9,
+                requiresPrestige: 3,
+            },
+        };
+
+        const RESEARCH_DEFS = {
+            improvedTools: {
+                id: 'improvedTools',
+                name: 'Improved Tools',
+                description: 'All resource production +15%.',
+                cost: { science: 40 },
+                effects: { globalMultiplier: 0.15 },
+                requires: [],
+            },
+            agriculture: {
+                id: 'agriculture',
+                name: 'Advanced Agriculture',
+                description: 'Farmers produce +50% Food.',
+                cost: { science: 80 },
+                effects: { farmerMultiplier: 0.5 },
+                requires: ['improvedTools'],
+            },
+            housing: {
+                id: 'housing',
+                name: 'Efficient Housing',
+                description: 'Population cap from housing +30%.',
+                cost: { science: 70 },
+                effects: { housingMultiplier: 0.3 },
+                requires: ['improvedTools'],
+            },
+            logistics: {
+                id: 'logistics',
+                name: 'Logistics & Planning',
+                description: 'Food consumption per colonist -15%.',
+                cost: { science: 90 },
+                effects: { foodConsumptionMult: -0.15 },
+                requires: ['agriculture'],
+            },
+            energyTech: {
+                id: 'energyTech',
+                name: 'Energy Technology',
+                description: 'Energy output from Engineers +60%.',
+                cost: { science: 120 },
+                effects: { engineerMultiplier: 0.6 },
+                requires: ['logistics'],
+            },
+            forestry: {
+                id: 'forestry',
+                name: 'Efficient Forestry',
+                description: 'Lumberjacks produce +50% Wood.',
+                cost: { science: 70 },
+                effects: { lumberjackMultiplier: 0.5 },
+                requires: ['improvedTools'],
+            },
+            mining: {
+                id: 'mining',
+                name: 'Deep Mining',
+                description: 'Miners produce +50% Stone and Metal.',
+                cost: { science: 90 },
+                effects: { minerMultiplier: 0.5 },
+                requires: ['improvedTools'],
+            },
+            education: {
+                id: 'education',
+                name: 'Education',
+                description: 'Scientists produce +60% Science.',
+                cost: { science: 110 },
+                effects: { scientistMultiplier: 0.6 },
+                requires: ['housing'],
+            },
+            festivalCulture: {
+                id: 'festivalCulture',
+                name: 'Festival Culture',
+                description: 'All resource production +10%.',
+                cost: { science: 120 },
+                effects: { globalMultiplier: 0.1 },
+                requires: ['logistics'],
+            },
+            medicine: {
+                id: 'medicine',
+                name: 'Community Medicine',
+                description: 'Food consumption per colonist -10%.',
+                cost: { science: 130 },
+                effects: { foodConsumptionMult: -0.10 },
+                requires: ['housing'],
+            },
+            securityTheory: {
+                id: 'securityTheory',
+                name: 'Security Doctrine',
+                description: 'Guards are 50% more effective against crime and hordes.',
+                cost: { science: 150 },
+                effects: { guardMultiplier: 0.5 },
+                requires: ['education'],
+            },
+            civicPlanning: {
+                id: 'civicPlanning',
+                name: 'Civic Planning',
+                description: 'Politicians are 50% more effective at preventing wars and securing deals.',
+                cost: { science: 160 },
+                effects: { politicianMultiplier: 0.5 },
+                requires: ['education'],
+            },
+            smartGrid: {
+                id: 'smartGrid',
+                name: 'Smart Grid',
+                description: 'Energy coverage provides stronger bonuses to all production.',
+                cost: { science: 200 },
+                effects: { energyBonusMultiplier: 0.25 },
+                requires: ['energyTech'],
+            },
+            megaEngineering: {
+                id: 'megaEngineering',
+                name: 'Mega Engineering',
+                description: 'Allows construction of the Capital Megastructure.',
+                cost: { science: 600 },
+                effects: {},
+                requires: ['smartGrid', 'civicPlanning'],
+            },
+        };
+
+        const PRESTIGE_UPGRADES = {
+            legacyKnowledge: {
+                id: 'legacyKnowledge',
+                name: 'Legacy Knowledge',
+                description: 'Permanent +5% global production per level.',
+                cost: 1,
+                maxLevel: 15,
+            },
+            seasonedPioneers: {
+                id: 'seasonedPioneers',
+                name: 'Seasoned Pioneers',
+                description: 'Each level starts new settlements with +2 population and +4 housing.',
+                cost: 1,
+                maxLevel: 10,
+            },
+            veteranEngineers: {
+                id: 'veteranEngineers',
+                name: 'Veteran Engineers',
+                description: 'Construction time -6% per level (min 40% of base).',
+                cost: 1,
+                maxLevel: 10,
+            },
+            fortifiedLegacy: {
+                id: 'fortifiedLegacy',
+                name: 'Fortified Legacy',
+                description: 'Guards and Walls are more effective against hordes and crime.',
+                cost: 1,
+                maxLevel: 8,
+            },
+            diplomaticNetwork: {
+                id: 'diplomaticNetwork',
+                name: 'Diplomatic Network',
+                description: 'Better rewards from diplomatic events, less chance of war.',
+                cost: 1,
+                maxLevel: 8,
+            },
+        };
+
+        // --------- Game State ---------
+        const DEFAULT_STATE = () => ({
+            ticks: 0,
+            tickMs: TICK_DEFAULT_MS,
+            resources: {
+                food: 50,
+                wood: 0,
+                stone: 0,
+                metal: 0,
+                science: 0,
+                energy: 0,
+            },
+            jobs: {
+                farmer: 1,
+                lumberjack: 0,
+                miner: 0,
+                scientist: 0,
+                engineer: 0,
+                guard: 0,
+                politician: 0,
+            },
+            buildings: Object.fromEntries(Object.keys(BUILDING_DEFS).map(id => [id, 0])),
+            research: Object.fromEntries(Object.keys(RESEARCH_DEFS).map(id => [id, false])),
+            population: 3,
+            populationCap: 4,
+            happiness: 1.0,
+            statusMessage: 'A small group of pioneers arrives at a promising valley.',
+            lastLogEntries: [],
+            lastBabyTick: 0,
+            lastEventTick: 0,
+            constructionQueue: [], // { id, remaining, total }
+            prestigePoints: 0,
+            totalPrestigePoints: 0,
+            prestigeCount: 0,
+            prestigeUpgrades: Object.fromEntries(Object.keys(PRESTIGE_UPGRADES).map(id => [id, 0])),
+            victoryAchieved: false,
+        });
+
+        let state = DEFAULT_STATE();
+        let tickIntervalId = null;
+        let autosaveIntervalId = null;
+
+        // --------- DOM Cache ---------
+        const el = {};
+        function cacheDom() {
+            el.food = document.getElementById('food');
+            el.wood = document.getElementById('wood');
+            el.stone = document.getElementById('stone');
+            el.metal = document.getElementById('metal');
+            el.science = document.getElementById('science');
+            el.energy = document.getElementById('energy');
+
+            el.foodRate = document.getElementById('foodRate');
+            el.woodRate = document.getElementById('woodRate');
+            el.stoneRate = document.getElementById('stoneRate');
+            el.metalRate = document.getElementById('metalRate');
+            el.scienceRate = document.getElementById('scienceRate');
+            el.energyRate = document.getElementById('energyRate');
+
+            el.population = document.getElementById('population');
+            el.populationCap = document.getElementById('populationCap');
+            el.unassigned = document.getElementById('unassigned');
+            el.happiness = document.getElementById('happiness');
+            el.colonyLevel = document.getElementById('colonyLevel');
+            el.statusMessage = document.getElementById('statusMessage');
+            el.ticks = document.getElementById('ticks');
+            el.energyStatus = document.getElementById('energyStatus');
+
+            el.jobsContainer = document.getElementById('jobsContainer');
+            el.buildingsContainer = document.getElementById('buildingsContainer');
+            el.researchContainer = document.getElementById('researchContainer');
+            el.log = document.getElementById('log');
+
+            el.saveBtn = document.getElementById('saveBtn');
+            el.loadBtn = document.getElementById('loadBtn');
+            el.resetBtn = document.getElementById('resetBtn');
+            el.clearLogBtn = document.getElementById('clearLogBtn');
+            el.speedSelect = document.getElementById('speedSelect');
+
+            el.prestigePoints = document.getElementById('prestigePoints');
+            el.prestigeCount = document.getElementById('prestigeCount');
+            el.prestigeBtn = document.getElementById('prestigeBtn');
+            el.prestigeHint = document.getElementById('prestigeHint');
+            el.prestigeUpgradesContainer = document.getElementById('prestigeUpgradesContainer');
+
+            el.victoryModal = document.getElementById('victoryModal');
+            el.victoryCloseBtn = document.getElementById('victoryCloseBtn');
+        }
+
+        // --------- Helpers ---------
+        function fmt(num, decimals = 1) {
+            if (Math.abs(num) < 1000) return num.toFixed(decimals).replace(/\.0+$/, '');
+            const units = ['k', 'M', 'B', 'T'];
+            let u = -1;
+            let n = num;
+            while (Math.abs(n) >= 1000 && u < units.length - 1) {
+                n /= 1000;
+                u++;
+            }
+            return n.toFixed(decimals).replace(/\.0+$/, '') + units[u];
+        }
+
+        function canAfford(cost) {
+            return Object.entries(cost).every(([res, amount]) => state.resources[res] >= amount);
+        }
+
+        function payCost(cost) {
+            Object.entries(cost).forEach(([res, amount]) => {
+                state.resources[res] -= amount;
+            });
+        }
+
+        function addLog(message) {
+            const time = new Date().toLocaleTimeString();
+            const entry = `[${time}] ${message}`;
+            state.lastLogEntries.push(entry);
+            if (state.lastLogEntries.length > 120) state.lastLogEntries.shift();
+            const p = document.createElement('p');
+            p.textContent = entry;
+            el.log.appendChild(p);
+            el.log.scrollTop = el.log.scrollHeight;
+        }
+
+        function updateText(node, value, clsPositiveNegative = false) {
+            if (!node) return;
+            if (node.textContent === value) return;
+            node.textContent = value;
+            if (clsPositiveNegative) {
+                const num = parseFloat(value);
+                node.classList.remove('resource-positive', 'resource-negative');
+                if (num > 0) node.classList.add('resource-positive');
+                else if (num < 0) node.classList.add('resource-negative');
+            }
+        }
+
+        function computeColonyLevel(pop) {
+            if (pop >= 1000) return 10;
+            if (pop >= 600) return 9;
+            if (pop >= 350) return 8;
+            if (pop >= 220) return 7;
+            if (pop >= 150) return 6;
+            if (pop >= 100) return 5;
+            if (pop >= 50) return 4;
+            if (pop >= 20) return 3;
+            if (pop >= 10) return 2;
+            return 1;
+        }
+
+        function getUnassigned() {
+            const assigned = Object.values(state.jobs).reduce((a, b) => a + b, 0);
+            return Math.max(0, state.population - assigned);
+        }
+
+        function buildingUnderConstructionCount(id) {
+            return state.constructionQueue.filter(job => job.id === id).length;
+        }
+
+        // --------- UI Construction ---------
+        function createJobRows() {
+            el.jobsContainer.innerHTML = '';
+            Object.values(JOB_DEFS).forEach(job => {
+                const row = document.createElement('div');
+                row.className = 'border border-slate-800 rounded px-2 py-2 bg-slate-900/60 flex flex-col gap-1';
+
+                const top = document.createElement('div');
+                top.className = 'flex justify-between items-center gap-2';
+
+                const left = document.createElement('div');
+                left.className = 'flex flex-col';
+                const name = document.createElement('span');
+                name.className = 'font-semibold text-slate-200';
+                name.textContent = job.name;
+                const desc = document.createElement('span');
+                desc.className = 'text-[0.65rem] text-slate-400';
+                desc.textContent = job.description;
+                left.appendChild(name);
+                left.appendChild(desc);
+
+                const controls = document.createElement('div');
+                controls.className = 'flex items-center gap-1 text-[0.7rem]';
+                const minus = document.createElement('button');
+                minus.textContent = '-';
+                minus.className = 'w-6 h-6 rounded border border-slate-700 bg-slate-900 hover:bg-slate-800';
+                minus.addEventListener('click', () => changeJob(job.id, -1));
+                const count = document.createElement('span');
+                count.id = `job-${job.id}`;
+                count.className = 'w-8 text-center font-mono';
+                count.textContent = state.jobs[job.id] || 0;
+                const plus = document.createElement('button');
+                plus.textContent = '+';
+                plus.className = 'w-6 h-6 rounded border border-slate-700 bg-slate-900 hover:bg-slate-800';
+                plus.addEventListener('click', () => changeJob(job.id, +1));
+
+                controls.appendChild(minus);
+                controls.appendChild(count);
+                controls.appendChild(plus);
+
+                top.appendChild(left);
+                top.appendChild(controls);
+                row.appendChild(top);
+
+                const output = document.createElement('div');
+                output.className = 'text-[0.65rem] text-slate-400 flex justify-between';
+                const outLabel = document.createElement('span');
+                outLabel.textContent = 'Base Output';
+                const outVal = document.createElement('span');
+                const baseText = Object.keys(job.baseOutput).length
+                    ? Object.entries(job.baseOutput).map(([k, v]) => `${fmt(v, 1)} ${k}`).join(', ')
+                    : 'No direct resource, affects events.';
+                outVal.textContent = baseText;
+                output.appendChild(outLabel);
+                output.appendChild(outVal);
+                row.appendChild(output);
+
+                el.jobsContainer.appendChild(row);
+            });
+        }
+
+        function createBuildingRows() {
+            el.buildingsContainer.innerHTML = '';
+            Object.values(BUILDING_DEFS).forEach(b => {
+                const row = document.createElement('div');
+                row.className = 'border border-slate-800 rounded px-2 py-2 bg-slate-900/60 flex flex-col gap-1';
+
+                const head = document.createElement('div');
+                head.className = 'flex justify-between items-center gap-2';
+
+                const left = document.createElement('div');
+                left.className = 'flex flex-col';
+                const name = document.createElement('span');
+                name.className = 'font-semibold text-slate-200';
+                name.textContent = b.name;
+                const desc = document.createElement('span');
+                desc.className = 'text-[0.65rem] text-slate-400';
+                desc.textContent = b.description;
+                left.appendChild(name);
+                left.appendChild(desc);
+
+                const right = document.createElement('div');
+                right.className = 'flex items-center gap-2 text-[0.7rem]';
+                const count = document.createElement('span');
+                count.id = `building-${b.id}`;
+                count.className = 'font-mono w-6 text-right';
+                count.textContent = state.buildings[b.id] || 0;
+                const buildBtn = document.createElement('button');
+                buildBtn.textContent = 'Build';
+                buildBtn.className = 'px-2 py-1 rounded border border-slate-700 bg-slate-900 hover:bg-slate-800';
+                buildBtn.addEventListener('click', () => build(b.id));
+                buildBtn.id = `buildBtn-${b.id}`;
+                right.appendChild(count);
+                right.appendChild(buildBtn);
+
+                head.appendChild(left);
+                head.appendChild(right);
+                row.appendChild(head);
+
+                const costLine = document.createElement('div');
+                costLine.className = 'text-[0.65rem] text-slate-400 flex justify-between';
+                const costLabel = document.createElement('span');
+                costLabel.textContent = 'Cost';
+                const costVal = document.createElement('span');
+                costVal.id = `buildingCost-${b.id}`;
+                costLine.appendChild(costLabel);
+                costLine.appendChild(costVal);
+                row.appendChild(costLine);
+
+                const queueInfo = document.createElement('div');
+                queueInfo.className = 'text-[0.6rem] text-slate-400 flex flex-col gap-0.5';
+                const queueText = document.createElement('span');
+                queueText.id = `buildingQueue-${b.id}`;
+                queueInfo.appendChild(queueText);
+
+                const barOuter = document.createElement('div');
+                barOuter.className = 'h-1.5 w-full rounded progress-bar-bg overflow-hidden';
+                const barInner = document.createElement('div');
+                barInner.id = `buildingProgress-${b.id}`;
+                barInner.className = 'h-full progress-bar-fill';
+                barInner.style.width = '0%';
+                barOuter.appendChild(barInner);
+                queueInfo.appendChild(barOuter);
+
+                row.appendChild(queueInfo);
+
+                el.buildingsContainer.appendChild(row);
+            });
+        }
+
+        function createResearchRows() {
+            el.researchContainer.innerHTML = '';
+            Object.values(RESEARCH_DEFS).forEach(r => {
+                const row = document.createElement('div');
+                row.className = 'border border-slate-800 rounded px-2 py-2 bg-slate-900/60 flex flex-col gap-1';
+
+                const head = document.createElement('div');
+                head.className = 'flex justify-between items-center gap-2';
+
+                const left = document.createElement('div');
+                left.className = 'flex flex-col';
+                const name = document.createElement('span');
+                name.className = 'font-semibold text-slate-200';
+                name.textContent = r.name;
+                const desc = document.createElement('span');
+                desc.className = 'text-[0.65rem] text-slate-400';
+                desc.textContent = r.description;
+                left.appendChild(name);
+                left.appendChild(desc);
+
+                const btn = document.createElement('button');
+                btn.id = `researchBtn-${r.id}`;
+                btn.textContent = 'Research';
+                btn.className = 'px-2 py-1 rounded border border-slate-700 bg-slate-900 hover:bg-slate-800 text-[0.7rem]';
+                btn.addEventListener('click', () => research(r.id));
+
+                head.appendChild(left);
+                head.appendChild(btn);
+                row.appendChild(head);
+
+                const bottom = document.createElement('div');
+                bottom.className = 'flex justify-between text-[0.65rem] text-slate-400';
+                const costLabel = document.createElement('span');
+                costLabel.textContent = 'Cost';
+                const costVal = document.createElement('span');
+                costVal.id = `researchCost-${r.id}`;
+                bottom.appendChild(costLabel);
+                bottom.appendChild(costVal);
+                row.appendChild(bottom);
+
+                el.researchContainer.appendChild(row);
+            });
+        }
+
+        function createPrestigeRows() {
+            el.prestigeUpgradesContainer.innerHTML = '';
+            Object.values(PRESTIGE_UPGRADES).forEach(pu => {
+                const row = document.createElement('div');
+                row.className = 'border border-slate-800 rounded px-2 py-1.5 bg-slate-900/60 flex flex-col gap-0.5';
+
+                const top = document.createElement('div');
+                top.className = 'flex justify-between items-center gap-2';
+                const left = document.createElement('div');
+                left.className = 'flex flex-col';
+                const name = document.createElement('span');
+                name.className = 'font-semibold text-slate-200 text-[0.75rem]';
+                name.textContent = pu.name;
+                const desc = document.createElement('span');
+                desc.className = 'text-[0.65rem] text-slate-400';
+                desc.textContent = pu.description;
+                left.appendChild(name);
+                left.appendChild(desc);
+
+                const right = document.createElement('div');
+                right.className = 'flex flex-col items-end text-[0.65rem] gap-0.5';
+                const level = document.createElement('span');
+                level.id = `prestigeLevel-${pu.id}`;
+                level.className = 'font-mono';
+                level.textContent = `Lv ${state.prestigeUpgrades[pu.id] || 0}/${pu.maxLevel}`;
+                const btn = document.createElement('button');
+                btn.id = `prestigeBuy-${pu.id}`;
+                btn.textContent = `Buy (${pu.cost})`;
+                btn.className = 'px-2 py-0.5 rounded border border-amber-700 bg-amber-950 hover:bg-amber-900';
+                btn.addEventListener('click', () => buyPrestigeUpgrade(pu.id));
+                right.appendChild(level);
+                right.appendChild(btn);
+
+                top.appendChild(left);
+                top.appendChild(right);
+                row.appendChild(top);
+
+                el.prestigeUpgradesContainer.appendChild(row);
+            });
+        }
+
+        // --------- Mechanics ---------
+        function getBuildingCost(id, count) {
+            const def = BUILDING_DEFS[id];
+            const multiplier = Math.pow(1.18, count); // exponential scaling based on completed buildings
+            const cost = {};
+            Object.entries(def.baseCost).forEach(([res, base]) => {
+                cost[res] = Math.ceil(base * multiplier);
+            });
+            return cost;
+        }
+
+        function changeJob(id, delta) {
+            const current = state.jobs[id] || 0;
+            if (delta > 0 && getUnassigned() <= 0) return;
+            if (delta < 0 && current <= 0) return;
+            state.jobs[id] = current + delta;
+            const span = document.getElementById(`job-${id}`);
+            if (span) span.textContent = state.jobs[id];
+            renderOverview();
+        }
+
+        function calculateBuildTimeTicks(buildingId) {
+            const def = BUILDING_DEFS[buildingId];
+            const base = def.buildTimeBase || 12;
+            const existing = state.buildings[buildingId] || 0;
+            const queued = buildingUnderConstructionCount(buildingId);
+            let time = base * (1 + 0.06 * (existing + queued));
+            const veLevel = state.prestigeUpgrades.veteranEngineers || 0;
+            if (veLevel > 0) {
+                const factor = Math.max(0.4, 1 - 0.06 * veLevel);
+                time *= factor;
+            }
+            return Math.ceil(time);
+        }
+
+        function build(id) {
+            const bDef = BUILDING_DEFS[id];
+            const completedCount = state.buildings[id] || 0;
+            const cost = getBuildingCost(id, completedCount + buildingUnderConstructionCount(id));
+            const colonyLevel = computeColonyLevel(state.population);
+            const requiredPrestige = bDef.requiresPrestige || 0;
+            if (colonyLevel < bDef.unlockAt) return;
+            if (state.prestigeCount < requiredPrestige) return;
+            if (!canAfford(cost)) return;
+
+            payCost(cost);
+            const buildTime = calculateBuildTimeTicks(id);
+            state.constructionQueue.push({ id, remaining: buildTime, total: buildTime });
+            addLog(`Started constructing ${bDef.name} (takes ${buildTime} ticks).`);
+            renderBuildings();
+            renderResourcesAndRates();
+        }
+
+        function finishConstruction(job) {
+            const def = BUILDING_DEFS[job.id];
+            state.buildings[job.id] = (state.buildings[job.id] || 0) + 1;
+            applyBuildingEffects();
+            addLog(`Construction completed: ${def.name}.`);
+        }
+
+        function processConstructionQueue() {
+            if (!state.constructionQueue.length) return;
+            const remainingJobs = [];
+            for (const job of state.constructionQueue) {
+                job.remaining -= 1;
+                if (job.remaining <= 0) {
+                    finishConstruction(job);
+                } else {
+                    remainingJobs.push(job);
+                }
+            }
+            state.constructionQueue = remainingJobs;
+        }
+
+        function research(id) {
+            if (state.research[id]) return;
+            const def = RESEARCH_DEFS[id];
+            if (!def) return;
+            if (!def.requires.every(req => state.research[req])) return;
+            if (!canAfford(def.cost)) return;
+            payCost(def.cost);
+            state.research[id] = true;
+            addLog(`Completed research: ${def.name}.`);
+            applyBuildingEffects();
+            renderAll();
+        }
+
+        function applyBuildingEffects() {
+            // Recompute population cap and cached multipliers
+            let baseHousingCap = 0;
+            Object.entries(state.buildings).forEach(([id, count]) => {
+                const def = BUILDING_DEFS[id];
+                if (!def || !count) return;
+                if (def.effects.populationCap) {
+                    baseHousingCap += def.effects.populationCap * count;
+                }
+            });
+
+            let housingMult = 1;
+            Object.entries(state.research).forEach(([id, done]) => {
+                if (!done) return;
+                const eff = RESEARCH_DEFS[id].effects || {};
+                if (eff.housingMultiplier) housingMult += eff.housingMultiplier;
+            });
+
+            state.populationCap = Math.max(4, Math.floor(baseHousingCap * housingMult));
+        }
+
+        function computeSecurityAndPolitics() {
+            const guardBase = state.jobs.guard || 0;
+            const politicianBase = state.jobs.politician || 0;
+            let guardMult = 1;
+            let politicianMult = 1;
+            let securityFlat = 0;
+
+            // buildings
+            Object.entries(state.buildings).forEach(([id, count]) => {
+                if (!count) return;
+                const eff = BUILDING_DEFS[id].effects || {};
+                if (eff.guardMultiplier) guardMult += eff.guardMultiplier * count;
+                if (eff.politicianMultiplier) politicianMult += eff.politicianMultiplier * count;
+                if (eff.securityFlat) securityFlat += eff.securityFlat * count;
+            });
+
+            // research
+            Object.entries(state.research).forEach(([id, done]) => {
+                if (!done) return;
+                const eff = RESEARCH_DEFS[id].effects || {};
+                if (eff.guardMultiplier) guardMult += eff.guardMultiplier;
+                if (eff.politicianMultiplier) politicianMult += eff.politicianMultiplier;
+            });
+
+            // prestige
+            const fortLv = state.prestigeUpgrades.fortifiedLegacy || 0;
+            const dipLv = state.prestigeUpgrades.diplomaticNetwork || 0;
+            if (fortLv > 0) {
+                guardMult += 0.3 * fortLv;
+                securityFlat += 2 * fortLv;
+            }
+            if (dipLv > 0) {
+                politicianMult += 0.3 * dipLv;
+            }
+
+            const securityScore = guardBase * guardMult + securityFlat;
+            const politicsScore = politicianBase * politicianMult;
+            return { securityScore, politicsScore };
+        }
+
+        function computeRates() {
+            const rates = {
+                food: 0,
+                wood: 0,
+                stone: 0,
+                metal: 0,
+                science: 0,
+                energy: 0,
+            };
+
+            let globalMult = 1;
+            let foodConsumptionMult = 1;
+            const jobMult = {
+                farmer: 1,
+                lumberjack: 1,
+                miner: 1,
+                scientist: 1,
+                engineer: 1,
+                guard: 1,
+                politician: 1,
+            };
+
+            // from buildings
+            Object.entries(state.buildings).forEach(([id, count]) => {
+                if (!count) return;
+                const eff = BUILDING_DEFS[id].effects || {};
+                if (eff.globalMultiplier) globalMult += eff.globalMultiplier * count;
+                if (eff.farmerMultiplier) jobMult.farmer += eff.farmerMultiplier * count;
+                if (eff.lumberjackMultiplier) jobMult.lumberjack += eff.lumberjackMultiplier * count;
+                if (eff.minerMultiplier) jobMult.miner += eff.minerMultiplier * count;
+                if (eff.scientistMultiplier) jobMult.scientist += eff.scientistMultiplier * count;
+                if (eff.guardMultiplier) jobMult.guard += eff.guardMultiplier * count;
+                if (eff.politicianMultiplier) jobMult.politician += eff.politicianMultiplier * count;
+                if (eff.flatEnergy) rates.energy += eff.flatEnergy * count;
+            });
+
+            // from research
+            let energyBonusMultFromResearch = 0;
+            Object.entries(state.research).forEach(([id, done]) => {
+                if (!done) return;
+                const eff = RESEARCH_DEFS[id].effects || {};
+                if (eff.globalMultiplier) globalMult += eff.globalMultiplier;
+                if (eff.farmerMultiplier) jobMult.farmer += eff.farmerMultiplier;
+                if (eff.engineerMultiplier) jobMult.engineer += eff.engineerMultiplier;
+                if (eff.lumberjackMultiplier) jobMult.lumberjack += eff.lumberjackMultiplier;
+                if (eff.minerMultiplier) jobMult.miner += eff.minerMultiplier;
+                if (eff.scientistMultiplier) jobMult.scientist += eff.scientistMultiplier;
+                if (eff.foodConsumptionMult) foodConsumptionMult += eff.foodConsumptionMult;
+                if (eff.guardMultiplier) jobMult.guard += eff.guardMultiplier;
+                if (eff.politicianMultiplier) jobMult.politician += eff.politicianMultiplier;
+                if (eff.energyBonusMultiplier) energyBonusMultFromResearch += eff.energyBonusMultiplier;
+            });
+
+            // prestige global bonuses
+            const legacyLv = state.prestigeUpgrades.legacyKnowledge || 0;
+            if (legacyLv > 0) {
+                globalMult *= 1 + 0.05 * legacyLv;
+            }
+
+            // job outputs
+            Object.entries(JOB_DEFS).forEach(([id, def]) => {
+                const count = state.jobs[id] || 0;
+                if (!count) return;
+                const mult = globalMult * (jobMult[id] || 1);
+                Object.entries(def.baseOutput).forEach(([res, base]) => {
+                    rates[res] += base * count * mult;
+                });
+            });
+
+            // energy coverage affects global multiplier after base calculation
+            // compute energy production and demand
+            const energyProduction = rates.energy; // from engineers + buildings
+            const buildingCount = Object.values(state.buildings).reduce((a, b) => a + b, 0);
+            const energyDemand = state.population * 0.2 + buildingCount * 0.15; // simple heuristic
+            let energyRatio = 1;
+            if (energyDemand > 0) {
+                energyRatio = energyProduction / energyDemand;
+            }
+
+            let energyStatusText = 'Stable';
+            if (energyDemand <= 0) {
+                energyStatusText = 'Low demand';
+            } else if (energyRatio < 0.4) {
+                energyStatusText = 'Critical shortage';
+            } else if (energyRatio < 0.9) {
+                energyStatusText = 'Underpowered';
+            } else if (energyRatio < 1.2) {
+                energyStatusText = 'Balanced';
+            } else if (energyRatio < 1.8) {
+                energyStatusText = 'Surplus';
+            } else {
+                energyStatusText = 'High surplus';
+            }
+            state._cachedEnergyStatusText = energyStatusText;
+
+            // apply energy effect to global production (except energy itself)
+            if (energyDemand > 0) {
+                let energyEffectMult;
+                if (energyRatio < 1) {
+                    // penalty when underpowered, but never below 40% speed
+                    energyEffectMult = 0.4 + 0.6 * Math.max(0, energyRatio);
+                } else {
+                    // bonuses for surplus, capped
+                    const bonusBase = Math.min(0.35, 0.15 * (energyRatio - 1));
+                    const bonusExtra = bonusBase * (1 + energyBonusMultFromResearch);
+                    energyEffectMult = 1 + bonusExtra;
+                }
+                Object.keys(rates).forEach(res => {
+                    if (res === 'energy') return;
+                    rates[res] *= energyEffectMult;
+                });
+            }
+
+            // energy resource reflects production minus demand (for display only)
+            rates.energy = energyProduction - energyDemand;
+
+            // food consumption
+            const foodConsumptionPerColonist = 1 * foodConsumptionMult;
+            const foodConsumed = state.population * foodConsumptionPerColonist;
+            rates.food -= foodConsumed;
+
+            return { rates, foodConsumed, energyDemand, energyProduction };
+        }
+
+        function tryTriggerRandomEvent() {
+            if (state.ticks < 50) return;
+            const since = state.ticks - (state.lastEventTick || 0);
+            if (since < EVENT_COOLDOWN_TICKS) return;
+            if (Math.random() > EVENT_BASE_CHANCE) return;
+
+            state.lastEventTick = state.ticks;
+
+            const { securityScore, politicsScore } = computeSecurityAndPolitics();
+            const happinessPct = Math.round(state.happiness * 100);
+
+            // determine whether this tick tends to be positive or negative
+            let negativeBias = 0.55; // base 55% negative
+            negativeBias -= Math.min(0.25, securityScore * 0.02);
+            negativeBias -= Math.min(0.15, politicsScore * 0.02);
+            negativeBias -= Math.min(0.1, Math.max(0, (happinessPct - 50)) * 0.002);
+
+            const isNegative = Math.random() < Math.max(0.1, Math.min(0.9, negativeBias));
+            if (isNegative) {
+                triggerNegativeEvent(securityScore, politicsScore);
+            } else {
+                triggerPositiveEvent(securityScore, politicsScore);
+            }
+        }
+
+        function triggerPositiveEvent(securityScore, politicsScore) {
+            const roll = Math.random();
+            const pop = state.population;
+
+            if (roll < 0.35) {
+                // abundant harvest (buffed by happiness)
+                const bonus = 30 + pop * 2 + Math.round(pop * state.happiness * 0.5);
+                state.resources.food += bonus;
+                state.statusMessage = 'Abundant harvest! Food stores have surged.';
+                addLog(`Positive event: abundant harvest yields an extra ${fmt(bonus, 0)} food.`);
+            } else if (roll < 0.6) {
+                // rich ore vein
+                const stoneBonus = 20 + pop + Math.round(securityScore * 0.5);
+                const metalBonus = 5 + Math.round(pop / 3);
+                state.resources.stone += stoneBonus;
+                state.resources.metal += metalBonus;
+                state.statusMessage = 'A rich ore vein was discovered nearby.';
+                addLog(`Positive event: miners discover rich deposits (+${fmt(stoneBonus, 0)} stone, +${fmt(metalBonus, 0)} metal).`);
+            } else if (roll < 0.85) {
+                // diplomatic windfall
+                const dipBoost = 1 + politicsScore * 0.15 + (state.prestigeUpgrades.diplomaticNetwork || 0) * 0.4;
+                const food = Math.round(40 * dipBoost);
+                const wood = Math.round(35 * dipBoost);
+                const metal = Math.round(18 * dipBoost);
+                state.resources.food += food;
+                state.resources.wood += wood;
+                state.resources.metal += metal;
+                state.statusMessage = 'A neighboring settlement sends generous aid after successful talks.';
+                addLog(`Positive event: diplomatic aid (+${fmt(food, 0)} food, +${fmt(wood, 0)} wood, +${fmt(metal, 0)} metal).`);
+            } else {
+                // small cultural festival (happiness boost)
+                state.happiness = Math.min(1.2, state.happiness + 0.1);
+                state.statusMessage = 'A spontaneous festival lifts spirits across the colony.';
+                addLog('Positive event: a festival raises happiness.');
+            }
+        }
+
+        function triggerNegativeEvent(securityScore, politicsScore) {
+            const roll = Math.random();
+            const pop = state.population;
+            const fortLv = state.prestigeUpgrades.fortifiedLegacy || 0;
+
+            if (roll < 0.35) {
+                // theft
+                const protection = Math.min(0.75, (securityScore * 0.03) + fortLv * 0.04);
+                const woodLoss = Math.round(Math.min(state.resources.wood, (15 + pop) * (1 - protection)));
+                const foodLoss = Math.round(Math.min(state.resources.food, (20 + pop * 1.5) * (1 - protection)));
+                state.resources.wood -= woodLoss;
+                state.resources.food -= foodLoss;
+                state.statusMessage = 'A wave of petty theft hits your storehouses.';
+                addLog(`Negative event: theft ring steals ${fmt(foodLoss, 0)} food and ${fmt(woodLoss, 0)} wood (reduced by security).`);
+            } else if (roll < 0.6) {
+                // murder / violent crime
+                const protection = Math.min(0.7, securityScore * 0.04 + fortLv * 0.05);
+                if (pop > 5) {
+                    const baseLoss = Math.max(1, Math.round(pop * 0.03));
+                    const lost = Math.max(1, Math.round(baseLoss * (1 - protection)));
+                    state.population = Math.max(0, state.population - lost);
+                    state.happiness = Math.max(0.1, state.happiness - 0.15);
+                    state.statusMessage = 'A series of violent crimes shocks the colony.';
+                    addLog(`Negative event: violent crime claims ${lost} lives (partially mitigated by security).`);
+                } else {
+                    state.happiness = Math.max(0.1, state.happiness - 0.05);
+                    state.statusMessage = 'Rising tensions and minor assaults unsettle people.';
+                    addLog('Negative event: unrest and minor violence lower morale.');
+                }
+            } else if (roll < 0.85) {
+                // horde / raid
+                const protection = Math.min(0.85, securityScore * 0.05 + fortLv * 0.06);
+                const buildingCount = Object.values(state.buildings).reduce((a, b) => a + b, 0);
+                const baseWoodLoss = 40 + pop + buildingCount * 2;
+                const baseStoneLoss = 25 + buildingCount * 2;
+                const basePopLoss = pop > 15 ? Math.round(pop * 0.05) : 1;
+                const woodLoss = Math.round(Math.min(state.resources.wood, baseWoodLoss * (1 - protection)));
+                const stoneLoss = Math.round(Math.min(state.resources.stone, baseStoneLoss * (1 - protection)));
+                const popLoss = Math.max(0, Math.round(basePopLoss * (1 - protection)));
+                state.resources.wood -= woodLoss;
+                state.resources.stone -= stoneLoss;
+                state.population = Math.max(0, state.population - popLoss);
+                state.happiness = Math.max(0.1, state.happiness - 0.2);
+                state.statusMessage = 'A horde of raiders tests your defenses.';
+                addLog(`Negative event: raiders cause ${fmt(woodLoss, 0)} wood and ${fmt(stoneLoss, 0)} stone loss${popLoss ? `, ${popLoss} casualties` : ''}.`);
+            } else {
+                // diplomatic crisis / near-war
+                const dipLv = state.prestigeUpgrades.diplomaticNetwork || 0;
+                const mitigation = Math.min(0.85, politicsScore * 0.05 + dipLv * 0.08);
+                const chanceWar = 0.65 * (1 - mitigation);
+                if (Math.random() < chanceWar) {
+                    // small war: heavy losses but loot
+                    const popLoss = Math.max(2, Math.round(pop * 0.06));
+                    const woodLoss = Math.round(Math.min(state.resources.wood, 60 + pop));
+                    const stoneLoss = Math.round(Math.min(state.resources.stone, 40 + pop));
+                    state.population = Math.max(0, state.population - popLoss);
+                    state.resources.wood -= woodLoss;
+                    state.resources.stone -= stoneLoss;
+                    const lootMetal = 60 + Math.round(pop * 0.6);
+                    const lootScience = 80 + Math.round(pop * 0.4);
+                    state.resources.metal += lootMetal;
+                    state.resources.science += lootScience;
+                    state.statusMessage = 'A brief war erupts. You suffer losses but seize valuable spoils.';
+                    addLog(`War event: lose ${popLoss} colonists, ${fmt(woodLoss, 0)} wood, ${fmt(stoneLoss, 0)} stone, but gain ${fmt(lootMetal, 0)} metal and ${fmt(lootScience, 0)} science.`);
+                } else {
+                    // crisis defused
+                    state.happiness = Math.max(0.1, state.happiness - 0.05);
+                    state.statusMessage = 'A diplomatic crisis is narrowly averted.';
+                    addLog('Event: a diplomatic crisis almost leads to war but is defused by your politicians.');
+                }
+            }
+        }
+
+        function checkVictoryCondition() {
+            if (state.victoryAchieved) return false;
+            const allResearchDone = Object.values(state.research).every(v => v);
+            const capitalCount = state.buildings.capital || 0;
+            const pop = state.population;
+            if (!allResearchDone) return false;
+            if (capitalCount < 1) return false;
+            if (pop < 1000) return false;
+            if (state.prestigeCount < 5) return false;
+            return true;
+        }
+
+        function gameTick() {
+            if (state.victoryAchieved) {
+                // still tick resources slowly if desired, but avoid double-processing
+            }
+
+            state.ticks++;
+
+            // construction
+            processConstructionQueue();
+
+            const { rates } = computeRates();
+
+            // apply resources
+            Object.entries(rates).forEach(([res, delta]) => {
+                state.resources[res] += delta;
+                if (state.resources[res] < 0) state.resources[res] = 0;
+            });
+
+            // starvation logic
+            if (rates.food < 0 && state.resources.food <= 0 && state.population > 0) {
+                const lost = Math.max(1, Math.round(state.population * 0.05));
+                state.population = Math.max(0, state.population - lost);
+                state.statusMessage = 'Starvation! Colonists are dying due to lack of food.';
+                addLog(`Starvation: ${lost} colonists lost.`);
+            }
+
+            // population growth via migrants when surplus food and housing
+            const surplusFood = rates.food > 1 && state.resources.food > 30;
+            const hasHousing = state.population < state.populationCap;
+            if (surplusFood && hasHousing) {
+                const growthChance = 0.1 + 0.02 * (computeColonyLevel(state.population) - 1);
+                if (Math.random() < growthChance) {
+                    state.population++;
+                    state.statusMessage = 'New colonist has joined your settlement.';
+                    addLog("A new colonist arrives, drawn by your colony's prospects.");
+                }
+            }
+
+            // happiness (simple proxy)
+            const foodOk = rates.food >= -0.5;
+            const housingOk = state.population <= state.populationCap;
+            let happiness = 1.0;
+            if (!foodOk) happiness -= 0.25;
+            if (!housingOk) happiness -= 0.2;
+            // slight bonus from safe & well-run colony
+            const { securityScore, politicsScore } = computeSecurityAndPolitics();
+            happiness += Math.min(0.15, (securityScore + politicsScore) * 0.01);
+            state.happiness = Math.max(0.1, Math.min(1.2, happiness));
+
+            // baby births with cooldown: need 2 unassigned, happiness>50%, free housing
+            const happinessPct = Math.round(state.happiness * 100);
+            const unassigned = getUnassigned();
+            if (
+                unassigned >= 2 &&
+                happinessPct > 50 &&
+                state.population < state.populationCap &&
+                state.ticks - (state.lastBabyTick || 0) >= BABY_COOLDOWN_TICKS
+            ) {
+                state.population++;
+                state.lastBabyTick = state.ticks;
+                state.statusMessage = 'A baby was born in your colony.';
+                addLog('A baby is born, and the colony celebrates new life.');
+            }
+
+            // random events
+            tryTriggerRandomEvent();
+
+            // victory
+            if (checkVictoryCondition()) {
+                state.victoryAchieved = true;
+                state.statusMessage = 'Your capital now anchors a unified world. You have effectively beaten the game!';
+                addLog('Victory: You have founded a world capital after many prestige runs.');
+                showVictoryModal();
+            }
+
+            renderAll();
+        }
+
+        // --------- Prestige Mechanics ---------
+        function canPrestigeNow() {
+            const pop = state.population;
+            const totalBuildings = Object.values(state.buildings).reduce((a, b) => a + b, 0);
+            const researchDone = Object.values(state.research).filter(v => v).length;
+            const colonyLevel = computeColonyLevel(pop);
+            // Simple threshold that encourages a bit of progress but not full completion
+            return colonyLevel >= 3 && totalBuildings >= 8 && researchDone >= 2;
+        }
+
+        function estimatePrestigePointsGained() {
+            const pop = state.population;
+            const totalBuildings = Object.values(state.buildings).reduce((a, b) => a + b, 0);
+            const researchDone = Object.values(state.research).filter(v => v).length;
+            const value = Math.floor(pop / 25 + totalBuildings / 10 + researchDone / 4);
+            return Math.max(1, value);
+        }
+
+        function performPrestige() {
+            const gained = estimatePrestigePointsGained();
+            const oldMeta = {
+                prestigePoints: state.prestigePoints + gained,
+                totalPrestigePoints: state.totalPrestigePoints + gained,
+                prestigeCount: state.prestigeCount + 1,
+                prestigeUpgrades: { ...state.prestigeUpgrades },
+            };
+
+            state = DEFAULT_STATE();
+            state.prestigePoints = oldMeta.prestigePoints;
+            state.totalPrestigePoints = oldMeta.totalPrestigePoints;
+            state.prestigeCount = oldMeta.prestigeCount;
+            state.prestigeUpgrades = oldMeta.prestigeUpgrades;
+
+            applyPrestigeStartBonuses();
+            applyBuildingEffects();
+            el.log.innerHTML = '';
+            addLog(`You move your people to a new settlement, carrying ${gained} prestige point(s) of hard-won experience.`);
+            renderAll();
+        }
+
+        function applyPrestigeStartBonuses() {
+            const spLv = state.prestigeUpgrades.seasonedPioneers || 0;
+            if (spLv > 0) {
+                state.population += 2 * spLv;
+                state.populationCap += 4 * spLv;
+            }
+        }
+
+        function buyPrestigeUpgrade(id) {
+            const def = PRESTIGE_UPGRADES[id];
+            if (!def) return;
+            const current = state.prestigeUpgrades[id] || 0;
+            if (current >= def.maxLevel) return;
+            if (state.prestigePoints < def.cost) return;
+            state.prestigePoints -= def.cost;
+            state.prestigeUpgrades[id] = current + 1;
+            addLog(`Prestige upgrade purchased: ${def.name} (Lv ${state.prestigeUpgrades[id]}).`);
+            applyBuildingEffects();
+            renderAll();
+        }
+
+        // --------- Rendering ---------
+        function renderResourcesAndRates() {
+            const { rates } = computeRates();
+            updateText(el.food, fmt(state.resources.food, 1));
+            updateText(el.wood, fmt(state.resources.wood, 1));
+            updateText(el.stone, fmt(state.resources.stone, 1));
+            updateText(el.metal, fmt(state.resources.metal, 1));
+            updateText(el.science, fmt(state.resources.science, 1));
+            updateText(el.energy, fmt(state.resources.energy, 1));
+
+            updateText(el.foodRate, `${rates.food >= 0 ? '+' : ''}${fmt(rates.food, 2)}`, true);
+            updateText(el.woodRate, `${rates.wood >= 0 ? '+' : ''}${fmt(rates.wood, 2)}`, true);
+            updateText(el.stoneRate, `${rates.stone >= 0 ? '+' : ''}${fmt(rates.stone, 2)}`, true);
+            updateText(el.metalRate, `${rates.metal >= 0 ? '+' : ''}${fmt(rates.metal, 2)}`, true);
+            updateText(el.scienceRate, `${rates.science >= 0 ? '+' : ''}${fmt(rates.science, 2)}`, true);
+            updateText(el.energyRate, `${rates.energy >= 0 ? '+' : ''}${fmt(rates.energy, 2)}`, true);
+
+            updateText(el.energyStatus, state._cachedEnergyStatusText || 'Stable');
+        }
+
+        function renderOverview() {
+            updateText(el.population, state.population.toString());
+            updateText(el.populationCap, state.populationCap.toString());
+            updateText(el.unassigned, getUnassigned().toString());
+            const happinessPct = Math.round(state.happiness * 100);
+            updateText(el.happiness, happinessPct + '%');
+            updateText(el.colonyLevel, computeColonyLevel(state.population).toString());
+            updateText(el.statusMessage, state.statusMessage || '');
+            updateText(el.ticks, state.ticks.toString());
+            updateText(el.prestigeCount, state.prestigeCount.toString());
+        }
+
+        function renderBuildings() {
+            Object.values(BUILDING_DEFS).forEach(b => {
+                const count = state.buildings[b.id] || 0;
+                const countEl = document.getElementById(`building-${b.id}`);
+                if (countEl) countEl.textContent = count;
+
+                const completedCount = count;
+                const cost = getBuildingCost(b.id, completedCount + buildingUnderConstructionCount(b.id));
+                const costEl = document.getElementById(`buildingCost-${b.id}`);
+                if (costEl) {
+                    costEl.textContent = Object.entries(cost)
+                        .map(([res, amt]) => `${fmt(amt, 0)} ${res}`)
+                        .join(', ');
+                }
+
+                const btn = document.getElementById(`buildBtn-${b.id}`);
+                if (btn) {
+                    const unlocked = computeColonyLevel(state.population) >= b.unlockAt;
+                    const prestigeOk = (state.prestigeCount || 0) >= (b.requiresPrestige || 0);
+                    const affordable = canAfford(cost);
+                    const enabled = unlocked && prestigeOk && affordable;
+                    if (!enabled) btn.classList.add('btn-disabled');
+                    else btn.classList.remove('btn-disabled');
+                    btn.disabled = !enabled;
+                    if (!unlocked) btn.title = `Requires colony level ${b.unlockAt}`;
+                    else if (!prestigeOk && b.requiresPrestige) btn.title = `Requires at least ${b.requiresPrestige} prestige run(s)`;
+                    else if (!affordable) btn.title = 'Not enough resources';
+                    else btn.title = '';
+                }
+
+                const queueItems = state.constructionQueue.filter(q => q.id === b.id);
+                const queueTextEl = document.getElementById(`buildingQueue-${b.id}`);
+                const progressEl = document.getElementById(`buildingProgress-${b.id}`);
+                if (queueTextEl) {
+                    if (!queueItems.length) {
+                        queueTextEl.textContent = 'No buildings under construction.';
+                    } else {
+                        const next = queueItems.reduce((a, c) => (c.remaining < a.remaining ? c : a));
+                        queueTextEl.textContent = `Under construction: ${queueItems.length} (next finishes in ${next.remaining} ticks)`;
+                        if (progressEl) {
+                            const pct = Math.max(0, Math.min(100, ((next.total - next.remaining) / next.total) * 100));
+                            progressEl.style.width = pct.toFixed(1) + '%';
+                        }
+                    }
+                }
+                if (queueItems.length === 0 && progressEl) {
+                    progressEl.style.width = '0%';
+                }
+            });
+        }
+
+        function renderResearch() {
+            Object.values(RESEARCH_DEFS).forEach(r => {
+                const costEl = document.getElementById(`researchCost-${r.id}`);
+                if (costEl) {
+                    costEl.textContent = Object.entries(r.cost)
+                        .map(([res, amt]) => `${fmt(amt, 0)} ${res}`)
+                        .join(', ');
+                }
+                const btn = document.getElementById(`researchBtn-${r.id}`);
+                if (!btn) return;
+                if (state.research[r.id]) {
+                    btn.textContent = 'Completed';
+                    btn.disabled = true;
+                    btn.classList.add('btn-disabled');
+                } else {
+                    const prereqsOk = r.requires.every(req => state.research[req]);
+                    const affordable = canAfford(r.cost);
+                    btn.disabled = !prereqsOk || !affordable;
+                    if (btn.disabled) btn.classList.add('btn-disabled');
+                    else btn.classList.remove('btn-disabled');
+                    btn.title = prereqsOk ? (affordable ? '' : 'Not enough science') : `Requires: ${r.requires.map(id => RESEARCH_DEFS[id].name).join(', ')}`;
+                }
+            });
+        }
+
+        function renderJobs() {
+            Object.keys(JOB_DEFS).forEach(id => {
+                const span = document.getElementById(`job-${id}`);
+                if (span) span.textContent = state.jobs[id] || 0;
+            });
+        }
+
+        function renderPrestige() {
+            updateText(el.prestigePoints, state.prestigePoints.toString());
+            updateText(el.prestigeCount, state.prestigeCount.toString());
+
+            const canPrestigeFlag = canPrestigeNow();
+            el.prestigeBtn.disabled = !canPrestigeFlag;
+            if (!canPrestigeFlag) {
+                el.prestigeBtn.classList.add('btn-disabled');
+                el.prestigeHint.textContent = 'Grow your colony (level, buildings, and research) to unlock prestige. Roughly: level 3+, 8+ buildings, 2+ research.';
+            } else {
+                el.prestigeBtn.classList.remove('btn-disabled');
+                const est = estimatePrestigePointsGained();
+                el.prestigeHint.textContent = `Prestiging now would grant approximately ${est} prestige point(s). First prestige always gives at least 1.`;
+            }
+
+            Object.values(PRESTIGE_UPGRADES).forEach(pu => {
+                const levelEl = document.getElementById(`prestigeLevel-${pu.id}`);
+                const btn = document.getElementById(`prestigeBuy-${pu.id}`);
+                const lvl = state.prestigeUpgrades[pu.id] || 0;
+                if (levelEl) {
+                    levelEl.textContent = `Lv ${lvl}/${pu.maxLevel}`;
+                }
+                if (btn) {
+                    const maxed = lvl >= pu.maxLevel;
+                    const affordable = state.prestigePoints >= pu.cost;
+                    btn.disabled = maxed || !affordable;
+                    if (btn.disabled) btn.classList.add('btn-disabled');
+                    else btn.classList.remove('btn-disabled');
+                    if (maxed) btn.textContent = 'Maxed';
+                    else btn.textContent = `Buy (${pu.cost})`;
+                }
+            });
+        }
+
+        function renderAll() {
+            renderResourcesAndRates();
+            renderOverview();
+            renderBuildings();
+            renderResearch();
+            renderJobs();
+            renderPrestige();
+        }
+
+        // --------- Save / Load / Reset ---------
+        function saveGame() {
+            try {
+                const data = JSON.stringify(state);
+                localStorage.setItem(SAVE_KEY, data);
+                addLog('Game saved.');
+            } catch (e) {
+                console.error('Save failed', e);
+            }
+        }
+
+        function loadGame() {
+            try {
+                const data = localStorage.getItem(SAVE_KEY);
+                if (!data) return false;
+                const loaded = JSON.parse(data);
+                if (!loaded || typeof loaded !== 'object') return false;
+                const fresh = DEFAULT_STATE();
+                state = Object.assign(fresh, loaded);
+                // ensure new keys
+                Object.keys(fresh.buildings).forEach(id => {
+                    if (state.buildings[id] == null) state.buildings[id] = 0;
+                });
+                Object.keys(fresh.research).forEach(id => {
+                    if (state.research[id] == null) state.research[id] = false;
+                });
+                Object.keys(fresh.prestigeUpgrades).forEach(id => {
+                    if (state.prestigeUpgrades[id] == null) state.prestigeUpgrades[id] = 0;
+                });
+                if (state.lastBabyTick == null) state.lastBabyTick = 0;
+                if (state.lastEventTick == null) state.lastEventTick = 0;
+                if (!Array.isArray(state.constructionQueue)) state.constructionQueue = [];
+                if (state.prestigePoints == null) state.prestigePoints = 0;
+                if (state.totalPrestigePoints == null) state.totalPrestigePoints = 0;
+                if (state.prestigeCount == null) state.prestigeCount = 0;
+                if (state.victoryAchieved == null) state.victoryAchieved = false;
+                applyBuildingEffects();
+                addLog('Loaded saved game.');
+                renderAll();
+                return true;
+            } catch (e) {
+                console.error('Load failed', e);
+                return false;
+            }
+        }
+
+        function resetGame() {
+            state = DEFAULT_STATE();
+            applyPrestigeStartBonuses();
+            applyBuildingEffects();
+            el.log.innerHTML = '';
+            addLog('Game reset. A new colony begins.');
+            renderAll();
+        }
+
+        // --------- Loop & Init ---------
+        function startTickLoop() {
+            if (tickIntervalId) clearInterval(tickIntervalId);
+            tickIntervalId = setInterval(gameTick, state.tickMs || TICK_DEFAULT_MS);
+        }
+
+        function startAutosave() {
+            if (autosaveIntervalId) clearInterval(autosaveIntervalId);
+            autosaveIntervalId = setInterval(saveGame, AUTOSAVE_INTERVAL_MS);
+        }
+
+        function showVictoryModal() {
+            if (!el.victoryModal) return;
+            el.victoryModal.classList.remove('hidden');
+        }
+
+        function hideVictoryModal() {
+            if (!el.victoryModal) return;
+            el.victoryModal.classList.add('hidden');
+        }
+
+        function initUIEvents() {
+            el.saveBtn.addEventListener('click', saveGame);
+            el.loadBtn.addEventListener('click', () => {
+                if (!loadGame()) addLog('No valid save found.');
+            });
+            el.resetBtn.addEventListener('click', () => {
+                if (confirm('Reset colony (but keep prestige) and start over?')) resetGame();
+            });
+            el.clearLogBtn.addEventListener('click', () => {
+                el.log.innerHTML = '';
+                state.lastLogEntries = [];
+            });
+            el.speedSelect.addEventListener('change', e => {
+                const ms = parseInt(e.target.value, 10) || TICK_DEFAULT_MS;
+                state.tickMs = ms;
+                startTickLoop();
+            });
+            el.prestigeBtn.addEventListener('click', () => {
+                if (!canPrestigeNow()) return;
+                const est = estimatePrestigePointsGained();
+                if (confirm(`Prestige now and move to a new settlement? This will reset resources, buildings, research and population but grant about ${est} prestige point(s).`)) {
+                    performPrestige();
+                }
+            });
+            if (el.victoryCloseBtn) {
+                el.victoryCloseBtn.addEventListener('click', hideVictoryModal);
+            }
+        }
+
+        function init() {
+            cacheDom();
+            createJobRows();
+            createBuildingRows();
+            createResearchRows();
+            createPrestigeRows();
+            applyPrestigeStartBonuses();
+            applyBuildingEffects();
+            initUIEvents();
+            addLog('Colony established. Use your starting food to survive and expand.');
+            addLog('Long-term goal: complete all research, construct a Capital Megastructure, reach 1000+ population and at least 5 prestiges.');
+            renderAll();
+            startTickLoop();
+            startAutosave();
+        }
+
+        window.addEventListener('load', () => {
+            init();
+            // Attempt auto-load after initial UI so messages show correctly
+            if (loadGame()) {
+                // state & UI already updated in loadGame
+            }
+        });
+    </script>
+</body>
+
+</html>
