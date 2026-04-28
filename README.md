@@ -82,11 +82,17 @@ This project is currently a single-file game (`index.html`) plus documentation/h
 
 ---
 
-### Upcoming Updates (unless I'm too lazy)
+## Draft Feature Backlog (all current drafts)
+
+The project currently has **16 draft features** (10 original draft backlog + 5 additional draft ideas + 1 balancing/ops draft) grouped below into **pairs of 2**.
+
+### Pair plan with weights, update name, and version
+
+> Pair weight = combined importance score for the two features.
 
 | Pair | Features (2) | Pair Weight | Update Name | Version |
 |---|---|---:|---|---|
-| 1 | Game Tutorial for new players | 16 | **Back to School** | `v0.8.9` |
+| 0 | Game Tutorial for new players *(shipped)* | 16 | **Back to School** | `v0.8.9` |
 | 1 | District Zoning + Supply Chains | 14 | **Steel & Streets** | `v0.9.0` |
 | 2 | Character Traits for Colonists + Guilds & Internal Politics | 12 | **Faces of the City** | `v0.9.1` |
 | 3 | Espionage Layer + Crisis Council | 11 | **Shadows & Sirens** | `v0.9.2` |
@@ -96,6 +102,23 @@ This project is currently a single-file game (`index.html`) plus documentation/h
 | 7 | Lineage / Dynasty System + Religion / Culture / Ideology Blocs | 11 | **Blood and Belief** | `v0.9.6` |
 | 8 | Infrastructure Wear & Maintenance + Telemetry & Balance Dashboard | 10 | **Stress Test** | `v0.9.7` |
 
+### Draft feature weights (reference)
+- District Zoning (7)
+- Supply Chains (7)
+- Character Traits for Colonists (6)
+- Guilds & Internal Politics (6)
+- Espionage Layer (6)
+- City Projects (5)
+- Naval Logistics (5)
+- Crisis Council (5)
+- Artifact Crafting (4)
+- Ecology & Pollution (4)
+- Dynamic Market & Trade Prices (7)
+- Lineage / Dynasty System (6)
+- Infrastructure Wear & Maintenance (6)
+- Religion / Culture / Ideology Blocs (5)
+- Great Wonders & National Legacies (5)
+- Telemetry & Balance Dashboard (4)
 
 ---
 
@@ -104,3 +127,5 @@ This project is currently a single-file game (`index.html`) plus documentation/h
 - Main runtime: plain browser JS in `index.html`
 - Styling: Tailwind CDN
 - No build step required for local play: open `index.html` in a browser
+
+If this session context is lost, see **`agent.md`** for detailed handoff state.

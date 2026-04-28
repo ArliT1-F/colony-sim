@@ -59,6 +59,8 @@
                     </p>
                 </div>
                 <div class="flex gap-2 text-xs">
+                    <button id="tutorialBtn"
+                        class="px-3 py-1 rounded border border-sky-700 text-sky-200 bg-sky-950 hover:bg-sky-900 transition">Tutorial</button>
                     <button id="saveBtn"
                         class="px-3 py-1 rounded border border-slate-700 bg-slate-900 hover:bg-slate-800 transition">Save</button>
                     <button id="loadBtn"
@@ -363,6 +365,37 @@
                 </div>
             </div>
         </div>
+
+        <!-- Tutorial Modal -->
+        <div id="tutorialModal" class="hidden fixed inset-0 z-40 flex items-center justify-center">
+            <div class="modal-backdrop absolute inset-0"></div>
+            <div class="relative z-50 max-w-xl w-full mx-4 p-4 rounded-lg border border-sky-600 bg-slate-950/95 shadow-xl">
+                <div class="flex items-center justify-between mb-2">
+                    <h2 class="text-lg font-semibold text-sky-300">New Colony Tutorial</h2>
+                    <button id="tutorialCloseBtn"
+                        class="px-2 py-0.5 rounded border border-slate-700 bg-slate-900 hover:bg-slate-800 text-xs">Close</button>
+                </div>
+                <p id="tutorialStepProgress" class="text-[0.7rem] text-slate-400 mb-1">Step 1/1</p>
+                <h3 id="tutorialStepTitle" class="text-sm font-semibold text-slate-100 mb-1">Welcome</h3>
+                <p id="tutorialStepBody" class="text-xs text-slate-300 mb-2"></p>
+                <div class="border border-slate-800 rounded p-2 bg-slate-900/50 mb-2">
+                    <p class="text-[0.65rem] text-slate-400 mb-1">Objective</p>
+                    <p id="tutorialStepObjective" class="text-[0.75rem] text-slate-200"></p>
+                    <p id="tutorialStepStatus" class="text-[0.65rem] text-slate-400 mt-1"></p>
+                </div>
+                <div class="flex justify-between gap-2 text-xs">
+                    <button id="tutorialPrevBtn"
+                        class="px-3 py-1 rounded border border-slate-700 bg-slate-900 hover:bg-slate-800">Prev</button>
+                    <div class="flex gap-2">
+                        <button id="tutorialSkipStepBtn"
+                            class="px-3 py-1 rounded border border-amber-700 text-amber-200 bg-amber-950 hover:bg-amber-900">Skip
+                            Step</button>
+                        <button id="tutorialNextBtn"
+                            class="px-3 py-1 rounded border border-sky-700 text-sky-200 bg-sky-950 hover:bg-sky-900">Next</button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -373,6 +406,7 @@
         const EVENT_BASE_CHANCE = 0.03; // base chance per tick to try an event
         const EVENT_COOLDOWN_TICKS = 85; // minimum ticks between events
         const SAVE_KEY = 'colonyIncrementalSave_v2';
+        const TUTORIAL_VERSION = 1;
         const SEASON_LENGTH_TICKS = 120;
         const SEASONS = ['Spring', 'Summer', 'Autumn', 'Winter'];
         const WEATHER_POOL = {
@@ -1034,6 +1068,14 @@
                 securityFlat: 0,
                 securityUntilTick: 0,
             },
+            tutorial: {
+                version: TUTORIAL_VERSION,
+                enabled: true,
+                dismissed: false,
+                completed: false,
+                step: 0,
+                launchedExpedition: false,
+            },
             victoryAchieved: false,
         });
 
@@ -1097,6 +1139,17 @@
             el.resetBtn = document.getElementById('resetBtn');
             el.clearLogBtn = document.getElementById('clearLogBtn');
             el.speedSelect = document.getElementById('speedSelect');
+            el.tutorialBtn = document.getElementById('tutorialBtn');
+            el.tutorialModal = document.getElementById('tutorialModal');
+            el.tutorialCloseBtn = document.getElementById('tutorialCloseBtn');
+            el.tutorialStepProgress = document.getElementById('tutorialStepProgress');
+            el.tutorialStepTitle = document.getElementById('tutorialStepTitle');
+            el.tutorialStepBody = document.getElementById('tutorialStepBody');
+            el.tutorialStepObjective = document.getElementById('tutorialStepObjective');
+            el.tutorialStepStatus = document.getElementById('tutorialStepStatus');
+            el.tutorialPrevBtn = document.getElementById('tutorialPrevBtn');
+            el.tutorialSkipStepBtn = document.getElementById('tutorialSkipStepBtn');
+            el.tutorialNextBtn = document.getElementById('tutorialNextBtn');
 
             el.prestigePoints = document.getElementById('prestigePoints');
             el.prestigeCount = document.getElementById('prestigeCount');
@@ -1154,6 +1207,105 @@
             }
         }
 
+        function isTutorialStepDone(step) {
+            switch (step.id) {
+                case 'overview':
+                    return true;
+                case 'jobs':
+                    return (state.jobs.farmer || 0) >= 2;
+                case 'build':
+                    return (state.buildings.tent || 0) >= 1;
+                case 'research':
+                    return !!state.research.improvedTools;
+                case 'policies':
+                    return Object.values(state.activePolicies || {}).some(Boolean);
+                case 'expedition':
+                    return !!state.activeExpedition || state.hero.level > 1 || state.ticks > 220;
+                case 'prestige':
+                    return canPrestigeNow();
+                default:
+                    return false;
+            }
+        }
+
+        function ensureTutorialState() {
+            if (!state.tutorial || typeof state.tutorial !== 'object') {
+                state.tutorial = { enabled: true, stepIndex: 0, completed: false };
+            }
+            if (state.tutorial.enabled == null) state.tutorial.enabled = true;
+            if (state.tutorial.stepIndex == null) state.tutorial.stepIndex = 0;
+            if (state.tutorial.completed == null) state.tutorial.completed = false;
+            if (state.tutorial.stepIndex < 0) state.tutorial.stepIndex = 0;
+            if (state.tutorial.stepIndex >= TUTORIAL_STEPS.length) {
+                state.tutorial.stepIndex = TUTORIAL_STEPS.length - 1;
+            }
+        }
+
+        function maybeAdvanceTutorial() {
+            if (!state.tutorial || !state.tutorial.enabled || state.tutorial.completed) return;
+            while (state.tutorial.stepIndex < TUTORIAL_STEPS.length) {
+                const step = TUTORIAL_STEPS[state.tutorial.stepIndex];
+                if (!isTutorialStepDone(step)) break;
+                state.tutorial.stepIndex += 1;
+            }
+            if (state.tutorial.stepIndex >= TUTORIAL_STEPS.length) {
+                state.tutorial.stepIndex = TUTORIAL_STEPS.length - 1;
+                state.tutorial.completed = true;
+                state.tutorial.enabled = false;
+                state.statusMessage = 'Tutorial complete. Your colony is ready to thrive.';
+                addLog('Tutorial completed: you have learned the core colony loop.');
+            }
+        }
+
+        function renderTutorial() {
+            if (!el.tutorialModal || !el.tutorialStepTitle || !el.tutorialStepBody) return;
+            normalizeTutorialState();
+
+            if (!isTutorialVisible()) {
+                el.tutorialModal.classList.add('hidden');
+                return;
+            }
+
+            const { step, idx, total } = getCurrentTutorialStep();
+            const done = !!step.autoComplete || !!step.check();
+            const isLast = idx >= total - 1;
+
+            el.tutorialModal.classList.remove('hidden');
+            updateText(el.tutorialStepProgress, `Step ${idx + 1}/${total}`);
+            updateText(el.tutorialStepTitle, step.title);
+            updateText(el.tutorialStepBody, step.description);
+            updateText(el.tutorialStepObjective, step.goalText);
+            updateText(el.tutorialStepStatus, done ? 'Status: complete, continue when ready.' : 'Status: in progress.');
+
+            if (el.tutorialPrevBtn) {
+                el.tutorialPrevBtn.disabled = idx <= 0;
+                if (el.tutorialPrevBtn.disabled) el.tutorialPrevBtn.classList.add('btn-disabled');
+                else el.tutorialPrevBtn.classList.remove('btn-disabled');
+            }
+            if (el.tutorialNextBtn) {
+                el.tutorialNextBtn.textContent = isLast ? 'Finish' : 'Next';
+                el.tutorialNextBtn.disabled = !done;
+                if (el.tutorialNextBtn.disabled) el.tutorialNextBtn.classList.add('btn-disabled');
+                else el.tutorialNextBtn.classList.remove('btn-disabled');
+            }
+        }
+
+        function tutorialNext() {
+            nextTutorialStep();
+        }
+
+        function tutorialBack() {
+            prevTutorialStep();
+        }
+
+        function tutorialSkip() {
+            skipTutorial();
+        }
+
+        function tutorialToggle() {
+            reopenTutorial();
+        }
+
         function computeColonyLevel(pop) {
             if (pop >= 1000) return 10;
             if (pop >= 600) return 9;
@@ -1170,6 +1322,141 @@
         function getUnassigned() {
             const assigned = Object.values(state.jobs).reduce((a, b) => a + b, 0);
             return Math.max(0, state.population - assigned);
+        }
+
+        function getTutorialSteps() {
+            return [
+                {
+                    title: 'Welcome to your first colony',
+                    description: 'You must balance Food, expansion, and progression. Start by assigning workers to gather resources.',
+                    goalText: 'Assign at least 1 Lumberjack.',
+                    check: () => (state.jobs?.lumberjack || 0) >= 1,
+                },
+                {
+                    title: 'Secure your first materials',
+                    description: 'You need Wood and Stone to expand housing and unlock infrastructure.',
+                    goalText: 'Reach 30 Wood and 10 Stone.',
+                    check: () => (state.resources?.wood || 0) >= 30 && (state.resources?.stone || 0) >= 10,
+                },
+                {
+                    title: 'Expand population capacity',
+                    description: 'Housing controls growth. Build a Tent first, then scale up.',
+                    goalText: 'Construct at least 1 Tent.',
+                    check: () => (state.buildings?.tent || 0) >= 1,
+                },
+                {
+                    title: 'Begin scientific progress',
+                    description: 'Science unlocks stronger multipliers and better long-term efficiency.',
+                    goalText: 'Complete the Improved Tools research.',
+                    check: () => !!state.research?.improvedTools,
+                },
+                {
+                    title: 'Meet your hero',
+                    description: 'Your hero drives expeditions, reputation, and powerful bonuses over time.',
+                    goalText: 'Launch your first expedition.',
+                    check: () => !!state.tutorial?.launchedExpedition,
+                },
+                {
+                    title: 'Diplomacy and policy basics',
+                    description: 'Factions and policies shape your strategic identity each run.',
+                    goalText: 'Activate any 1 policy OR reach 10 reputation with any faction.',
+                    check: () => {
+                        const anyPolicy = Object.values(state.activePolicies || {}).some(Boolean);
+                        const anyRep = Object.values(state.factions || {}).some(f => (f?.reputation || 0) >= 10);
+                        return anyPolicy || anyRep;
+                    },
+                },
+                {
+                    title: 'You are ready',
+                    description: 'You now know the core loop: stabilize Food/Energy, scale jobs/buildings/research, leverage hero + diplomacy, and prestige for meta growth.',
+                    goalText: 'Tutorial complete.',
+                    check: () => true,
+                    autoComplete: true,
+                },
+            ];
+        }
+
+        const TUTORIAL_STEPS = getTutorialSteps();
+
+        function normalizeTutorialState() {
+            ensureTutorialState();
+            if (state.tutorial.dismissed == null) state.tutorial.dismissed = false;
+            if (state.tutorial.launchedExpedition == null) state.tutorial.launchedExpedition = false;
+        }
+
+        function isTutorialVisible() {
+            normalizeTutorialState();
+            return !!state.tutorial.enabled && !state.tutorial.completed && !state.tutorial.dismissed;
+        }
+
+        function getCurrentTutorialStep() {
+            normalizeTutorialState();
+            const idx = Math.max(0, Math.min(TUTORIAL_STEPS.length - 1, state.tutorial.stepIndex || 0));
+            const step = TUTORIAL_STEPS[idx] || null;
+            return { step, idx, total: TUTORIAL_STEPS.length };
+        }
+
+        function completeTutorial() {
+            normalizeTutorialState();
+            state.tutorial.completed = true;
+            state.tutorial.enabled = false;
+            state.tutorial.dismissed = true;
+            state.statusMessage = 'Tutorial complete. Your colony is ready for advanced growth.';
+            addLog('Tutorial completed. You can reopen it anytime from the header.');
+        }
+
+        function nextTutorialStep(force = false) {
+            normalizeTutorialState();
+            if (state.tutorial.completed) return;
+            const { step, idx, total } = getCurrentTutorialStep();
+            if (!step) return;
+            const canAdvance = force || !!step.autoComplete || step.check();
+            if (!canAdvance) return;
+            if (idx >= total - 1) {
+                completeTutorial();
+                return;
+            }
+            state.tutorial.stepIndex = idx + 1;
+            state.statusMessage = `Tutorial: ${TUTORIAL_STEPS[state.tutorial.stepIndex].title}`;
+            renderTutorial();
+        }
+
+        function prevTutorialStep() {
+            normalizeTutorialState();
+            if ((state.tutorial.stepIndex || 0) <= 0) return;
+            state.tutorial.stepIndex -= 1;
+            renderTutorial();
+        }
+
+        function skipTutorial() {
+            normalizeTutorialState();
+            state.tutorial.dismissed = true;
+            state.tutorial.completed = true;
+            state.tutorial.enabled = false;
+            state.statusMessage = 'Tutorial skipped. Use "Tutorial" in header to reopen.';
+            addLog('Tutorial skipped. It can be reopened from the header button.');
+            renderTutorial();
+        }
+
+        function reopenTutorial() {
+            normalizeTutorialState();
+            state.tutorial.enabled = true;
+            state.tutorial.dismissed = false;
+            if (state.tutorial.completed) {
+                state.tutorial.completed = false;
+                state.tutorial.stepIndex = 0;
+            }
+            state.statusMessage = 'Tutorial reopened.';
+            renderTutorial();
+        }
+
+        function processTutorialProgress() {
+            if (!isTutorialVisible()) return;
+            maybeAdvanceTutorial();
+            const { step } = getCurrentTutorialStep();
+            if (step && (step.autoComplete || step.check())) {
+                nextTutorialStep(true);
+            }
         }
 
         function buildingUnderConstructionCount(id) {
@@ -1762,6 +2049,8 @@
                 total: quest.duration,
                 successChance: getQuestSuccessChance(quest),
             };
+            normalizeTutorialState();
+            state.tutorial.launchedExpedition = true;
             state.statusMessage = `${state.hero.name} departs on ${quest.name}.`;
             addLog(`Expedition started: ${quest.name}.`);
             renderAll();
@@ -2718,6 +3007,8 @@
             renderFactions();
             renderExpeditions();
             renderRoadmap();
+            processTutorialProgress();
+            renderTutorial();
         }
 
         // --------- Save / Load / Reset ---------
@@ -2777,6 +3068,16 @@
                 if (state.temporaryBuffs.securityUntilTick == null) state.temporaryBuffs.securityUntilTick = 0;
                 if (!state.activeExpedition || !QUEST_DEFS[state.activeExpedition.id]) {
                     state.activeExpedition = null;
+                }
+                if (!state.tutorial || typeof state.tutorial !== 'object') state.tutorial = { ...fresh.tutorial };
+                if (state.tutorial.version == null || state.tutorial.version !== TUTORIAL_VERSION) {
+                    state.tutorial = { ...fresh.tutorial };
+                } else {
+                    if (state.tutorial.enabled == null) state.tutorial.enabled = true;
+                    if (state.tutorial.dismissed == null) state.tutorial.dismissed = false;
+                    if (state.tutorial.completed == null) state.tutorial.completed = false;
+                    if (state.tutorial.stepIndex == null) state.tutorial.stepIndex = 0;
+                    if (state.tutorial.launchedExpedition == null) state.tutorial.launchedExpedition = false;
                 }
                 if (state.lastBabyTick == null) state.lastBabyTick = 0;
                 if (state.lastEventTick == null) state.lastEventTick = 0;
@@ -2842,6 +3143,38 @@
                 state.tickMs = ms;
                 startTickLoop();
             });
+            if (el.tutorialBtn) {
+                el.tutorialBtn.addEventListener('click', () => {
+                    reopenTutorial();
+                    renderTutorial();
+                });
+            }
+            if (el.tutorialNextBtn) {
+                el.tutorialNextBtn.addEventListener('click', () => {
+                    tutorialNext();
+                    renderTutorial();
+                });
+            }
+            if (el.tutorialSkipStepBtn) {
+                el.tutorialSkipStepBtn.addEventListener('click', () => {
+                    tutorialSkip();
+                    renderTutorial();
+                });
+            }
+            if (el.tutorialPrevBtn) {
+                el.tutorialPrevBtn.addEventListener('click', () => {
+                    tutorialBack();
+                    renderTutorial();
+                });
+            }
+            if (el.tutorialCloseBtn) {
+                el.tutorialCloseBtn.addEventListener('click', () => {
+                    if (!state.tutorial) return;
+                    state.tutorial.dismissed = true;
+                    state.statusMessage = 'Tutorial closed. Reopen anytime from the Tutorial button.';
+                    renderTutorial();
+                });
+            }
             el.prestigeBtn.addEventListener('click', () => {
                 if (!canPrestigeNow()) return;
                 const est = estimatePrestigePointsGained();
