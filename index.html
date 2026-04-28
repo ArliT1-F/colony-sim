@@ -163,6 +163,14 @@
                         <span class="text-slate-300">Prestige Runs</span>
                         <span class="font-mono" id="prestigeCount">0</span>
                     </div>
+                    <div class="flex justify-between items-baseline">
+                        <span class="text-slate-300">Year / Season</span>
+                        <span class="font-mono"><span id="worldYear">1</span> / <span id="seasonName">Spring</span></span>
+                    </div>
+                    <div class="flex justify-between items-baseline">
+                        <span class="text-slate-300">Weather</span>
+                        <span class="font-mono" id="weatherName">Clear</span>
+                    </div>
                     <p id="statusMessage" class="text-[0.7rem] text-slate-400 mt-1"></p>
                 </div>
             </section>
@@ -191,6 +199,81 @@
                     <p class="text-[0.7rem] text-slate-400 mb-1">Spend Science to unlock powerful upgrades. Late techs
                         and the final project require many prestige runs.</p>
                     <div id="researchContainer" class="flex flex-col gap-2"></div>
+                </div>
+            </section>
+
+            <!-- New Systems: Policies, Hero, Diplomacy -->
+            <section class="grid md:grid-cols-3 gap-4 text-xs">
+                <!-- Policies -->
+                <div class="border border-slate-800 rounded-lg bg-slate-950/70 p-3 flex flex-col gap-2">
+                    <h2 class="text-sm font-semibold text-slate-200 mb-1">Colony Policies</h2>
+                    <p class="text-[0.7rem] text-slate-400">Choose active laws to shape your economy, society, and
+                        security posture.</p>
+                    <div id="policiesContainer" class="flex flex-col gap-2"></div>
+                </div>
+
+                <!-- Hero & RPG -->
+                <div class="border border-slate-800 rounded-lg bg-slate-950/70 p-3 flex flex-col gap-2">
+                    <h2 class="text-sm font-semibold text-slate-200 mb-1">Hero Command</h2>
+                    <div class="text-[0.7rem] text-slate-300 flex justify-between">
+                        <span id="heroIdentity">Astra the Vanguard</span>
+                        <span class="font-mono" id="heroLevel">Lv 1</span>
+                    </div>
+                    <div class="text-[0.65rem] text-slate-400 flex justify-between">
+                        <span>XP</span>
+                        <span class="font-mono" id="heroXp">0 / 100</span>
+                    </div>
+                    <div class="text-[0.65rem] text-slate-400 flex justify-between">
+                        <span>Stats</span>
+                        <span class="font-mono" id="heroStats">ATK 0 DEF 0 INT 0</span>
+                    </div>
+                    <div class="text-[0.65rem] text-slate-400 flex justify-between">
+                        <span>Status</span>
+                        <span class="font-mono" id="heroStatus">Ready</span>
+                    </div>
+                    <div class="text-[0.65rem] text-slate-400 flex justify-between">
+                        <span>Perk Points</span>
+                        <span class="font-mono" id="heroPerkPoints">0</span>
+                    </div>
+                    <div id="heroGearButtons" class="grid grid-cols-1 gap-1"></div>
+                    <div id="heroPerkButtons" class="grid grid-cols-1 gap-1"></div>
+                </div>
+
+                <!-- Diplomacy & Factions -->
+                <div class="border border-slate-800 rounded-lg bg-slate-950/70 p-3 flex flex-col gap-2">
+                    <h2 class="text-sm font-semibold text-slate-200 mb-1">Faction Diplomacy</h2>
+                    <p class="text-[0.7rem] text-slate-400">Build reputation with regional factions for powerful support
+                        actions.</p>
+                    <div id="factionsContainer" class="flex flex-col gap-2"></div>
+                </div>
+            </section>
+
+            <!-- Expeditions -->
+            <section class="grid md:grid-cols-2 gap-4 text-xs">
+                <div class="border border-slate-800 rounded-lg bg-slate-950/70 p-3 flex flex-col gap-2">
+                    <h2 class="text-sm font-semibold text-slate-200 mb-1">Expedition Board</h2>
+                    <p class="text-[0.7rem] text-slate-400">Send your hero on missions for loot, renown, and rare
+                        opportunities.</p>
+                    <div id="questBoardContainer" class="flex flex-col gap-2"></div>
+                </div>
+                <div class="border border-slate-800 rounded-lg bg-slate-950/70 p-3 flex flex-col gap-2">
+                    <h2 class="text-sm font-semibold text-slate-200 mb-1">Active Expedition</h2>
+                    <p id="activeExpeditionText" class="text-[0.7rem] text-slate-400">No expedition is currently
+                        underway.</p>
+                    <div class="h-2 w-full rounded progress-bar-bg overflow-hidden">
+                        <div id="activeExpeditionProgress" class="h-full progress-bar-fill" style="width: 0%"></div>
+                    </div>
+                    <p id="expeditionOutcomeHint" class="text-[0.65rem] text-slate-500">Successful missions grant hero XP
+                        and faction reputation.</p>
+                </div>
+            </section>
+
+            <section class="grid md:grid-cols-1 gap-4 text-xs">
+                <div class="border border-slate-800 rounded-lg bg-slate-950/70 p-3 flex flex-col gap-2">
+                    <h2 class="text-sm font-semibold text-slate-200 mb-1">Feature Roadmap</h2>
+                    <p class="text-[0.7rem] text-slate-400">Weighted feature priorities with the top five implemented in
+                        this build.</p>
+                    <div id="roadmapContainer" class="grid md:grid-cols-2 gap-2"></div>
                 </div>
             </section>
 
@@ -290,6 +373,30 @@
         const EVENT_BASE_CHANCE = 0.04; // base chance per tick to try an event
         const EVENT_COOLDOWN_TICKS = 70; // minimum ticks between events
         const SAVE_KEY = 'colonyIncrementalSave_v2';
+        const SEASON_LENGTH_TICKS = 120;
+        const SEASONS = ['Spring', 'Summer', 'Autumn', 'Winter'];
+        const WEATHER_POOL = {
+            Spring: [
+                { name: 'Clear', effects: { foodMultiplier: 0.08, globalMultiplier: 0.02 } },
+                { name: 'Rainy', effects: { foodMultiplier: 0.15, woodMultiplier: -0.06 } },
+                { name: 'Storms', effects: { foodMultiplier: -0.08, energyDemandMultiplier: 0.1 } },
+            ],
+            Summer: [
+                { name: 'Clear', effects: { woodMultiplier: 0.08, globalMultiplier: 0.02 } },
+                { name: 'Heatwave', effects: { foodConsumptionMultiplier: 0.12, happinessFlat: -0.07 } },
+                { name: 'Dry Winds', effects: { foodMultiplier: -0.12, woodMultiplier: 0.1 } },
+            ],
+            Autumn: [
+                { name: 'Clear', effects: { foodMultiplier: 0.06, scienceMultiplier: 0.04 } },
+                { name: 'Harvest Peak', effects: { foodMultiplier: 0.2, happinessFlat: 0.05 } },
+                { name: 'Foggy', effects: { securityFlat: -2, politicsFlat: 1 } },
+            ],
+            Winter: [
+                { name: 'Clear', effects: { scienceMultiplier: 0.06 } },
+                { name: 'Snowfall', effects: { foodMultiplier: -0.15, energyDemandMultiplier: 0.16 } },
+                { name: 'Blizzard', effects: { foodMultiplier: -0.28, globalMultiplier: -0.1, energyDemandMultiplier: 0.24 } },
+            ],
+        };
 
         // --------- Definitions ---------
         const JOB_DEFS = {
@@ -620,6 +727,262 @@
             },
         };
 
+        const POLICY_DEFS = {
+            rationing: {
+                id: 'rationing',
+                name: 'Rationing Act',
+                description: 'Lower food use but people dislike strict ration limits.',
+                unlockAt: 2,
+                effects: { foodConsumptionMultiplier: -0.2, happinessFlat: -0.08 },
+            },
+            industrialMandate: {
+                id: 'industrialMandate',
+                name: 'Industrial Mandate',
+                description: 'Boost raw production while reducing scientific focus.',
+                unlockAt: 3,
+                effects: { woodMultiplier: 0.18, stoneMultiplier: 0.18, metalMultiplier: 0.2, scienceMultiplier: -0.12 },
+            },
+            scholarshipFund: {
+                id: 'scholarshipFund',
+                name: 'Scholarship Fund',
+                description: 'Invest in schools to accelerate science output.',
+                unlockAt: 3,
+                effects: { scienceMultiplier: 0.28, foodConsumptionMultiplier: 0.05 },
+            },
+            greenInitiative: {
+                id: 'greenInitiative',
+                name: 'Greenhouse Initiative',
+                description: 'Improves food resilience at the cost of extra energy demand.',
+                unlockAt: 4,
+                effects: { foodMultiplier: 0.22, energyDemandMultiplier: 0.12 },
+            },
+            civilGuard: {
+                id: 'civilGuard',
+                name: 'Civil Guard Program',
+                description: 'Civil defense drills improve safety but reduce morale.',
+                unlockAt: 4,
+                effects: { securityFlat: 4, guardMultiplier: 0.2, happinessFlat: -0.04 },
+            },
+            openDiplomacy: {
+                id: 'openDiplomacy',
+                name: 'Open Diplomacy Charter',
+                description: 'Improves political capital and faction relationship growth.',
+                unlockAt: 5,
+                effects: { politicsFlat: 3, repGainMultiplier: 0.25 },
+            },
+        };
+
+        const HERO_GEAR_DEFS = {
+            steelBlade: {
+                id: 'steelBlade',
+                name: 'Forge Steel Blade',
+                description: '+3 ATK for expedition success.',
+                cost: { metal: 120, wood: 80 },
+                statBoosts: { attack: 3 },
+            },
+            aegisArmor: {
+                id: 'aegisArmor',
+                name: 'Craft Aegis Armor',
+                description: '+3 DEF and +1 security.',
+                cost: { metal: 90, stone: 120 },
+                statBoosts: { defense: 3, securityFlat: 1 },
+            },
+            astroCodex: {
+                id: 'astroCodex',
+                name: 'Assemble Astro Codex',
+                description: '+3 INT and better science throughput.',
+                cost: { science: 200, wood: 100, metal: 60 },
+                statBoosts: { intellect: 3, scienceMultiplier: 0.08 },
+            },
+        };
+
+        const HERO_PERK_DEFS = {
+            trailblazer: {
+                id: 'trailblazer',
+                name: 'Trailblazer',
+                maxLevel: 3,
+                description: '+4% global production per level.',
+            },
+            tactician: {
+                id: 'tactician',
+                name: 'Tactician',
+                maxLevel: 3,
+                description: '+8% expedition success chance per level.',
+            },
+            diplomat: {
+                id: 'diplomat',
+                name: 'Silver Tongue',
+                maxLevel: 3,
+                description: '+12% faction reputation gain per level.',
+            },
+            warden: {
+                id: 'warden',
+                name: 'Warden Instinct',
+                maxLevel: 3,
+                description: '+2 flat security per level.',
+            },
+            savant: {
+                id: 'savant',
+                name: 'Battle Savant',
+                maxLevel: 3,
+                description: '+6% science output per level.',
+            },
+        };
+
+        const FACTION_DEFS = {
+            riverGuild: {
+                id: 'riverGuild',
+                name: 'River Guild',
+                description: 'Trade caravans and supply routes.',
+                passive: {
+                    resourceFromRep: { food: 0.003, wood: 0.0025 },
+                },
+                action: {
+                    id: 'tradeCaravan',
+                    name: 'Request Trade Caravan',
+                    minRep: 25,
+                    repCost: 12,
+                    cooldown: 220,
+                    reward: { food: 220, wood: 180, stone: 80 },
+                    description: 'Spend reputation for an immediate resource delivery.',
+                },
+            },
+            ironLegion: {
+                id: 'ironLegion',
+                name: 'Iron Legion',
+                description: 'Mercenary captains and veteran defenders.',
+                passive: {
+                    securityFlatPerRep: 0.05,
+                },
+                action: {
+                    id: 'defenseContract',
+                    name: 'Sign Defense Contract',
+                    minRep: 20,
+                    repCost: 10,
+                    cooldown: 220,
+                    reward: { metal: 120, science: 80 },
+                    buff: { securityFlat: 6, duration: 140 },
+                    description: 'Gain resources and temporary defensive strength.',
+                },
+            },
+            sunAcademy: {
+                id: 'sunAcademy',
+                name: 'Sun Academy',
+                description: 'Scholars, engineers, and diplomats.',
+                passive: {
+                    scienceMultiplierPerRep: 0.0009,
+                    politicsFlatPerRep: 0.015,
+                },
+                action: {
+                    id: 'knowledgeExchange',
+                    name: 'Host Knowledge Exchange',
+                    minRep: 25,
+                    repCost: 12,
+                    cooldown: 220,
+                    reward: { science: 300, energy: 120 },
+                    description: 'Convert reputation into a major science surge.',
+                },
+            },
+        };
+
+        const QUEST_DEFS = {
+            borderPatrol: {
+                id: 'borderPatrol',
+                name: 'Border Patrol Sweep',
+                description: 'Push raiders away from nearby routes.',
+                unlockLevel: 1,
+                duration: 40,
+                difficulty: 0.35,
+                cost: { food: 40 },
+                successReward: { wood: 80, stone: 60, xp: 70, rep: { ironLegion: 5 } },
+                failPenalty: { food: 40, happiness: 0.03 },
+            },
+            tradeEscort: {
+                id: 'tradeEscort',
+                name: 'Trade Escort Mission',
+                description: 'Escort river merchants and secure treaties.',
+                unlockLevel: 2,
+                duration: 50,
+                difficulty: 0.45,
+                cost: { food: 60, metal: 20 },
+                successReward: { food: 140, wood: 120, metal: 50, xp: 90, rep: { riverGuild: 7 } },
+                failPenalty: { food: 60, wood: 50, happiness: 0.04 },
+            },
+            ruinExpedition: {
+                id: 'ruinExpedition',
+                name: 'Ancient Ruin Expedition',
+                description: 'Delve into ruins for relics and research.',
+                unlockLevel: 3,
+                duration: 65,
+                difficulty: 0.58,
+                cost: { food: 90, energy: 40 },
+                successReward: { stone: 120, metal: 90, science: 220, xp: 130, rep: { sunAcademy: 8 } },
+                failPenalty: { food: 80, population: 1, happiness: 0.06 },
+            },
+            diplomaticSummit: {
+                id: 'diplomaticSummit',
+                name: 'Regional Diplomatic Summit',
+                description: 'Negotiate trade and peace with all factions.',
+                unlockLevel: 4,
+                duration: 55,
+                difficulty: 0.5,
+                cost: { food: 70, science: 50 },
+                successReward: { science: 160, xp: 110, rep: { riverGuild: 4, ironLegion: 4, sunAcademy: 4 } },
+                failPenalty: { science: 80, happiness: 0.05 },
+            },
+            farFrontier: {
+                id: 'farFrontier',
+                name: 'Far Frontier Breakthrough',
+                description: 'A dangerous campaign for legendary rewards.',
+                unlockLevel: 5,
+                duration: 80,
+                difficulty: 0.68,
+                cost: { food: 120, metal: 80, energy: 90 },
+                successReward: { food: 300, wood: 260, stone: 220, metal: 180, science: 260, xp: 170, rep: { riverGuild: 6, ironLegion: 6, sunAcademy: 6 } },
+                failPenalty: { food: 120, metal: 90, population: 2, happiness: 0.08 },
+            },
+        };
+
+        const FEATURE_ROADMAP = [
+            { name: 'Faction Reputation & Diplomacy Actions', weight: 10, summary: 'Persistent faction standings unlock strategic aid and temporary power spikes.' },
+            { name: 'Hero RPG Progression', weight: 9, summary: 'A leveling hero with gear/perks meaningfully alters economy, security, and expeditions.' },
+            { name: 'Expedition Quest Board', weight: 9, summary: 'Risk/reward missions add directed gameplay loops with XP, loot, and political outcomes.' },
+            { name: 'Policy & Law System', weight: 8, summary: 'Toggleable laws introduce macro tradeoffs and player identity for each run.' },
+            { name: 'Season + Weather Simulation', weight: 8, summary: 'World cadence shifts production and pressure over time, deepening planning gameplay.' },
+            { name: 'District Zoning', weight: 7, summary: 'Specialized urban districts with adjacency bonuses and upkeep costs.' },
+            { name: 'Supply Chains', weight: 7, summary: 'Intermediate goods (tools, medicine, alloys) consumed by advanced production.' },
+            { name: 'Character Traits for Colonists', weight: 6, summary: 'Named citizens with traits affecting job output and event outcomes.' },
+            { name: 'Guilds & Internal Politics', weight: 6, summary: 'Internal factions demand influence and create policy pressure/events.' },
+            { name: 'Espionage Layer', weight: 6, summary: 'Scouting and sabotage actions against threats with counter-intelligence defense.' },
+            { name: 'City Projects', weight: 5, summary: 'Large multi-phase public works with milestone bonuses and narrative beats.' },
+            { name: 'Naval Logistics', weight: 5, summary: 'Harbors, fleets, and sea trade lanes introducing a second transport economy.' },
+            { name: 'Crisis Council', weight: 5, summary: 'Time-limited dilemmas requiring multi-resource responses with branching effects.' },
+            { name: 'Artifact Crafting', weight: 4, summary: 'Rare expedition relics forge unique empire-wide passives.' },
+            { name: 'Ecology & Pollution', weight: 4, summary: 'Industrial growth creates environmental debt that must be mitigated.' },
+        ];
+
+        function createDefaultHero() {
+            return {
+                name: 'Astra',
+                title: 'Vanguard',
+                level: 1,
+                xp: 0,
+                xpToNext: 100,
+                perkPoints: 0,
+                baseStats: { attack: 3, defense: 3, intellect: 2 },
+                gearOwned: Object.fromEntries(Object.keys(HERO_GEAR_DEFS).map(id => [id, false])),
+                perks: Object.fromEntries(Object.keys(HERO_PERK_DEFS).map(id => [id, 0])),
+                cooldownUntilTick: 0,
+            };
+        }
+
+        function createDefaultFactions() {
+            return Object.fromEntries(Object.keys(FACTION_DEFS).map(id => [id, {
+                reputation: 0,
+                lastActionTick: -9999,
+            }]));
+        }
+
         // --------- Game State ---------
         const DEFAULT_STATE = () => ({
             ticks: 0,
@@ -655,6 +1018,21 @@
             totalPrestigePoints: 0,
             prestigeCount: 0,
             prestigeUpgrades: Object.fromEntries(Object.keys(PRESTIGE_UPGRADES).map(id => [id, 0])),
+            activePolicies: Object.fromEntries(Object.keys(POLICY_DEFS).map(id => [id, false])),
+            calendar: {
+                year: 1,
+                seasonIndex: 0,
+                ticksIntoSeason: 0,
+                weatherName: 'Clear',
+                weatherEffects: {},
+            },
+            hero: createDefaultHero(),
+            factions: createDefaultFactions(),
+            activeExpedition: null,
+            temporaryBuffs: {
+                securityFlat: 0,
+                securityUntilTick: 0,
+            },
             victoryAchieved: false,
         });
 
@@ -687,11 +1065,31 @@
             el.statusMessage = document.getElementById('statusMessage');
             el.ticks = document.getElementById('ticks');
             el.energyStatus = document.getElementById('energyStatus');
+            el.worldYear = document.getElementById('worldYear');
+            el.seasonName = document.getElementById('seasonName');
+            el.weatherName = document.getElementById('weatherName');
 
             el.jobsContainer = document.getElementById('jobsContainer');
             el.buildingsContainer = document.getElementById('buildingsContainer');
             el.researchContainer = document.getElementById('researchContainer');
+            el.policiesContainer = document.getElementById('policiesContainer');
+            el.factionsContainer = document.getElementById('factionsContainer');
+            el.questBoardContainer = document.getElementById('questBoardContainer');
             el.log = document.getElementById('log');
+
+            el.heroIdentity = document.getElementById('heroIdentity');
+            el.heroLevel = document.getElementById('heroLevel');
+            el.heroXp = document.getElementById('heroXp');
+            el.heroStats = document.getElementById('heroStats');
+            el.heroStatus = document.getElementById('heroStatus');
+            el.heroPerkPoints = document.getElementById('heroPerkPoints');
+            el.heroGearButtons = document.getElementById('heroGearButtons');
+            el.heroPerkButtons = document.getElementById('heroPerkButtons');
+
+            el.activeExpeditionText = document.getElementById('activeExpeditionText');
+            el.activeExpeditionProgress = document.getElementById('activeExpeditionProgress');
+            el.expeditionOutcomeHint = document.getElementById('expeditionOutcomeHint');
+            el.roadmapContainer = document.getElementById('roadmapContainer');
 
             el.saveBtn = document.getElementById('saveBtn');
             el.loadBtn = document.getElementById('loadBtn');
@@ -992,6 +1390,421 @@
             });
         }
 
+        function createPolicyRows() {
+            if (!el.policiesContainer) return;
+            el.policiesContainer.innerHTML = '';
+            Object.values(POLICY_DEFS).forEach(policy => {
+                const row = document.createElement('div');
+                row.className = 'border border-slate-800 rounded px-2 py-2 bg-slate-900/60 flex flex-col gap-1';
+
+                const top = document.createElement('div');
+                top.className = 'flex justify-between items-center gap-2';
+                const left = document.createElement('div');
+                left.className = 'flex flex-col';
+                const name = document.createElement('span');
+                name.className = 'font-semibold text-slate-200';
+                name.textContent = policy.name;
+                const desc = document.createElement('span');
+                desc.className = 'text-[0.65rem] text-slate-400';
+                desc.textContent = policy.description;
+                left.appendChild(name);
+                left.appendChild(desc);
+
+                const btn = document.createElement('button');
+                btn.id = `policyBtn-${policy.id}`;
+                btn.className = 'px-2 py-1 rounded border border-slate-700 bg-slate-900 hover:bg-slate-800 text-[0.7rem]';
+                btn.addEventListener('click', () => togglePolicy(policy.id));
+                top.appendChild(left);
+                top.appendChild(btn);
+                row.appendChild(top);
+
+                const line = document.createElement('div');
+                line.className = 'text-[0.62rem] text-slate-500';
+                line.textContent = `Unlocks at colony level ${policy.unlockAt}`;
+                row.appendChild(line);
+
+                el.policiesContainer.appendChild(row);
+            });
+        }
+
+        function createHeroControls() {
+            if (el.heroGearButtons) {
+                el.heroGearButtons.innerHTML = '';
+                Object.values(HERO_GEAR_DEFS).forEach(gear => {
+                    const btn = document.createElement('button');
+                    btn.id = `heroGearBtn-${gear.id}`;
+                    btn.className = 'px-2 py-1 rounded border border-sky-700 bg-sky-950 hover:bg-sky-900 text-[0.65rem] text-left';
+                    btn.addEventListener('click', () => buyHeroGear(gear.id));
+                    el.heroGearButtons.appendChild(btn);
+                });
+            }
+            if (el.heroPerkButtons) {
+                el.heroPerkButtons.innerHTML = '';
+                Object.values(HERO_PERK_DEFS).forEach(perk => {
+                    const btn = document.createElement('button');
+                    btn.id = `heroPerkBtn-${perk.id}`;
+                    btn.className = 'px-2 py-1 rounded border border-violet-700 bg-violet-950 hover:bg-violet-900 text-[0.65rem] text-left';
+                    btn.addEventListener('click', () => buyHeroPerk(perk.id));
+                    el.heroPerkButtons.appendChild(btn);
+                });
+            }
+        }
+
+        function createFactionRows() {
+            if (!el.factionsContainer) return;
+            el.factionsContainer.innerHTML = '';
+            Object.values(FACTION_DEFS).forEach(faction => {
+                const row = document.createElement('div');
+                row.className = 'border border-slate-800 rounded px-2 py-2 bg-slate-900/60 flex flex-col gap-1';
+
+                const top = document.createElement('div');
+                top.className = 'flex justify-between items-center gap-2';
+                const left = document.createElement('div');
+                left.className = 'flex flex-col';
+                const name = document.createElement('span');
+                name.className = 'font-semibold text-slate-200';
+                name.textContent = faction.name;
+                const desc = document.createElement('span');
+                desc.className = 'text-[0.65rem] text-slate-400';
+                desc.textContent = faction.description;
+                left.appendChild(name);
+                left.appendChild(desc);
+
+                const rep = document.createElement('span');
+                rep.id = `factionRep-${faction.id}`;
+                rep.className = 'font-mono text-[0.7rem]';
+                top.appendChild(left);
+                top.appendChild(rep);
+                row.appendChild(top);
+
+                const actionBtn = document.createElement('button');
+                actionBtn.id = `factionActionBtn-${faction.id}`;
+                actionBtn.className = 'px-2 py-1 rounded border border-emerald-700 bg-emerald-950 hover:bg-emerald-900 text-[0.65rem] text-left';
+                actionBtn.addEventListener('click', () => performFactionAction(faction.id));
+                row.appendChild(actionBtn);
+
+                el.factionsContainer.appendChild(row);
+            });
+        }
+
+        function createQuestRows() {
+            if (!el.questBoardContainer) return;
+            el.questBoardContainer.innerHTML = '';
+            Object.values(QUEST_DEFS).forEach(quest => {
+                const row = document.createElement('div');
+                row.className = 'border border-slate-800 rounded px-2 py-2 bg-slate-900/60 flex flex-col gap-1';
+
+                const top = document.createElement('div');
+                top.className = 'flex justify-between items-center gap-2';
+                const left = document.createElement('div');
+                left.className = 'flex flex-col';
+                const name = document.createElement('span');
+                name.className = 'font-semibold text-slate-200';
+                name.textContent = quest.name;
+                const desc = document.createElement('span');
+                desc.className = 'text-[0.65rem] text-slate-400';
+                desc.textContent = quest.description;
+                left.appendChild(name);
+                left.appendChild(desc);
+                const btn = document.createElement('button');
+                btn.id = `questBtn-${quest.id}`;
+                btn.className = 'px-2 py-1 rounded border border-indigo-700 bg-indigo-950 hover:bg-indigo-900 text-[0.65rem]';
+                btn.addEventListener('click', () => startExpedition(quest.id));
+                top.appendChild(left);
+                top.appendChild(btn);
+                row.appendChild(top);
+
+                const meta = document.createElement('div');
+                meta.className = 'text-[0.62rem] text-slate-500';
+                meta.id = `questMeta-${quest.id}`;
+                row.appendChild(meta);
+
+                el.questBoardContainer.appendChild(row);
+            });
+        }
+
+        function getSeasonName() {
+            return SEASONS[state.calendar.seasonIndex] || SEASONS[0];
+        }
+
+        function rollWeatherForCurrentSeason() {
+            const season = getSeasonName();
+            const pool = WEATHER_POOL[season] || WEATHER_POOL.Spring;
+            const pick = pool[Math.floor(Math.random() * pool.length)] || pool[0];
+            state.calendar.weatherName = pick.name;
+            state.calendar.weatherEffects = { ...(pick.effects || {}) };
+            addLog(`Seasonal shift: ${season} brings ${pick.name.toLowerCase()} weather.`);
+        }
+
+        function updateSeasonAndWeather() {
+            if (!state.calendar) return;
+            state.calendar.ticksIntoSeason += 1;
+            if (state.calendar.ticksIntoSeason >= SEASON_LENGTH_TICKS) {
+                state.calendar.ticksIntoSeason = 0;
+                state.calendar.seasonIndex = (state.calendar.seasonIndex + 1) % SEASONS.length;
+                if (state.calendar.seasonIndex === 0) state.calendar.year += 1;
+                rollWeatherForCurrentSeason();
+            }
+        }
+
+        function getPolicyEffects() {
+            const acc = {
+                foodMultiplier: 0,
+                woodMultiplier: 0,
+                stoneMultiplier: 0,
+                metalMultiplier: 0,
+                scienceMultiplier: 0,
+                energyMultiplier: 0,
+                globalMultiplier: 0,
+                foodConsumptionMultiplier: 0,
+                energyDemandMultiplier: 0,
+                happinessFlat: 0,
+                securityFlat: 0,
+                politicsFlat: 0,
+                guardMultiplier: 0,
+                repGainMultiplier: 0,
+            };
+            Object.entries(state.activePolicies || {}).forEach(([id, active]) => {
+                if (!active || !POLICY_DEFS[id]) return;
+                const eff = POLICY_DEFS[id].effects || {};
+                Object.entries(eff).forEach(([k, v]) => {
+                    if (acc[k] == null) acc[k] = 0;
+                    acc[k] += v;
+                });
+            });
+            return acc;
+        }
+
+        function togglePolicy(id) {
+            const def = POLICY_DEFS[id];
+            if (!def) return;
+            if (computeColonyLevel(state.population) < def.unlockAt) return;
+            state.activePolicies[id] = !state.activePolicies[id];
+            addLog(`${def.name} ${state.activePolicies[id] ? 'enacted' : 'repealed'}.`);
+            renderPolicies();
+            renderResourcesAndRates();
+        }
+
+        function getHeroStats() {
+            const stats = { ...(state.hero.baseStats || { attack: 0, defense: 0, intellect: 0 }) };
+            Object.entries(state.hero.gearOwned || {}).forEach(([id, owned]) => {
+                if (!owned || !HERO_GEAR_DEFS[id]) return;
+                const boosts = HERO_GEAR_DEFS[id].statBoosts || {};
+                if (boosts.attack) stats.attack += boosts.attack;
+                if (boosts.defense) stats.defense += boosts.defense;
+                if (boosts.intellect) stats.intellect += boosts.intellect;
+            });
+            return stats;
+        }
+
+        function getHeroBonuses() {
+            const stats = getHeroStats();
+            const perks = state.hero.perks || {};
+            const gearOwned = state.hero.gearOwned || {};
+            const bonuses = {
+                attack: stats.attack,
+                defense: stats.defense,
+                intellect: stats.intellect,
+                globalMultiplier: 0.04 * (perks.trailblazer || 0),
+                expeditionBonus: 0.08 * (perks.tactician || 0),
+                repGainMultiplier: 0.12 * (perks.diplomat || 0),
+                securityFlat: 2 * (perks.warden || 0),
+                scienceMultiplier: 0.06 * (perks.savant || 0),
+            };
+            if (gearOwned.aegisArmor) bonuses.securityFlat += 1;
+            if (gearOwned.astroCodex) bonuses.scienceMultiplier += 0.08;
+            bonuses.expeditionPower = stats.attack * 0.08 + stats.defense * 0.07 + stats.intellect * 0.06 + state.hero.level * 0.03;
+            return bonuses;
+        }
+
+        function ensureFactionState() {
+            if (!state.factions || typeof state.factions !== 'object') state.factions = createDefaultFactions();
+            Object.keys(FACTION_DEFS).forEach(id => {
+                if (!state.factions[id]) state.factions[id] = { reputation: 0, lastActionTick: -9999 };
+                if (state.factions[id].reputation == null) state.factions[id].reputation = 0;
+                if (state.factions[id].lastActionTick == null) state.factions[id].lastActionTick = -9999;
+            });
+        }
+
+        function gainFactionReputation(repMap, baseMultiplier = 1) {
+            ensureFactionState();
+            const heroBonus = getHeroBonuses();
+            const policyEffects = getPolicyEffects();
+            const repMult = Math.max(0.2, 1 + heroBonus.repGainMultiplier + (policyEffects.repGainMultiplier || 0));
+            Object.entries(repMap || {}).forEach(([factionId, gain]) => {
+                const faction = state.factions[factionId];
+                if (!faction) return;
+                const delta = gain * baseMultiplier * repMult;
+                faction.reputation = Math.max(-50, Math.min(100, faction.reputation + delta));
+            });
+        }
+
+        function getFactionPassiveEffects() {
+            ensureFactionState();
+            const out = {
+                resourcesPerTick: { food: 0, wood: 0, stone: 0, metal: 0, science: 0, energy: 0 },
+                securityFlat: 0,
+                politicsFlat: 0,
+                scienceMultiplier: 0,
+            };
+            Object.entries(FACTION_DEFS).forEach(([id, def]) => {
+                const rep = state.factions[id]?.reputation || 0;
+                const passive = def.passive || {};
+                if (passive.resourceFromRep) {
+                    Object.entries(passive.resourceFromRep).forEach(([res, factor]) => {
+                        out.resourcesPerTick[res] += rep * factor;
+                    });
+                }
+                if (passive.securityFlatPerRep) out.securityFlat += rep * passive.securityFlatPerRep;
+                if (passive.politicsFlatPerRep) out.politicsFlat += rep * passive.politicsFlatPerRep;
+                if (passive.scienceMultiplierPerRep) out.scienceMultiplier += rep * passive.scienceMultiplierPerRep;
+            });
+            return out;
+        }
+
+        function getFactionActionCooldownLeft(factionId) {
+            const fDef = FACTION_DEFS[factionId];
+            const factionState = state.factions?.[factionId];
+            if (!fDef || !factionState) return 0;
+            return Math.max(0, (fDef.action.cooldown || 0) - (state.ticks - (factionState.lastActionTick || -9999)));
+        }
+
+        function performFactionAction(factionId) {
+            ensureFactionState();
+            const fDef = FACTION_DEFS[factionId];
+            const faction = state.factions[factionId];
+            if (!fDef || !faction) return;
+            const action = fDef.action;
+            const cooldown = getFactionActionCooldownLeft(factionId);
+            if (cooldown > 0) return;
+            if (faction.reputation < action.minRep) return;
+            if (faction.reputation < action.repCost) return;
+            faction.reputation -= action.repCost;
+            Object.entries(action.reward || {}).forEach(([res, amt]) => {
+                state.resources[res] += amt;
+            });
+            if (action.buff && action.buff.securityFlat) {
+                state.temporaryBuffs.securityFlat += action.buff.securityFlat;
+                state.temporaryBuffs.securityUntilTick = Math.max(
+                    state.temporaryBuffs.securityUntilTick || 0,
+                    state.ticks + (action.buff.duration || 0)
+                );
+            }
+            faction.lastActionTick = state.ticks;
+            state.statusMessage = `${fDef.name}: ${action.name} completed.`;
+            addLog(`${fDef.name} action used: ${action.name}.`);
+            renderAll();
+        }
+
+        function awardHeroXp(amount) {
+            if (amount <= 0) return;
+            state.hero.xp += amount;
+            let leveledUp = false;
+            while (state.hero.xp >= state.hero.xpToNext) {
+                state.hero.xp -= state.hero.xpToNext;
+                state.hero.level += 1;
+                state.hero.perkPoints += 1;
+                state.hero.xpToNext = Math.floor(state.hero.xpToNext * 1.25 + 20);
+                state.hero.baseStats.attack += 1;
+                state.hero.baseStats.defense += 1;
+                state.hero.baseStats.intellect += 1;
+                addLog(`Hero level up! ${state.hero.name} reached level ${state.hero.level}.`);
+                leveledUp = true;
+            }
+            if (leveledUp) {
+                state.statusMessage = `${state.hero.name} has grown stronger through hard-fought victories.`;
+            }
+        }
+
+        function buyHeroGear(id) {
+            const gear = HERO_GEAR_DEFS[id];
+            if (!gear || state.hero.gearOwned[id]) return;
+            if (!canAfford(gear.cost)) return;
+            payCost(gear.cost);
+            state.hero.gearOwned[id] = true;
+            addLog(`Hero crafted gear: ${gear.name}.`);
+            renderAll();
+        }
+
+        function buyHeroPerk(id) {
+            const perk = HERO_PERK_DEFS[id];
+            if (!perk) return;
+            const current = state.hero.perks[id] || 0;
+            if (current >= perk.maxLevel) return;
+            if ((state.hero.perkPoints || 0) <= 0) return;
+            state.hero.perkPoints -= 1;
+            state.hero.perks[id] = current + 1;
+            addLog(`Hero learned perk: ${perk.name} Lv ${state.hero.perks[id]}.`);
+            renderAll();
+        }
+
+        function getQuestSuccessChance(quest) {
+            const heroBonus = getHeroBonuses();
+            const stats = getHeroStats();
+            const difficulty = quest.difficulty || 0.5;
+            const power = heroBonus.expeditionPower + stats.attack * 0.03 + stats.intellect * 0.02;
+            return Math.max(0.08, Math.min(0.95, 0.45 + power - difficulty + heroBonus.expeditionBonus));
+        }
+
+        function startExpedition(questId) {
+            if (state.activeExpedition) return;
+            if ((state.hero.cooldownUntilTick || 0) > state.ticks) return;
+            const quest = QUEST_DEFS[questId];
+            if (!quest) return;
+            if ((state.hero.level || 1) < (quest.unlockLevel || 1)) return;
+            if (!canAfford(quest.cost || {})) return;
+            payCost(quest.cost || {});
+            state.activeExpedition = {
+                id: quest.id,
+                name: quest.name,
+                remaining: quest.duration,
+                total: quest.duration,
+                successChance: getQuestSuccessChance(quest),
+            };
+            state.statusMessage = `${state.hero.name} departs on ${quest.name}.`;
+            addLog(`Expedition started: ${quest.name}.`);
+            renderAll();
+        }
+
+        function processExpedition() {
+            const active = state.activeExpedition;
+            if (!active) return;
+            active.remaining -= 1;
+            if (active.remaining > 0) return;
+            const quest = QUEST_DEFS[active.id];
+            if (!quest) {
+                state.activeExpedition = null;
+                return;
+            }
+            const success = Math.random() < active.successChance;
+            if (success) {
+                Object.entries(quest.successReward || {}).forEach(([key, val]) => {
+                    if (key === 'xp' || key === 'rep') return;
+                    state.resources[key] += val;
+                });
+                awardHeroXp(quest.successReward?.xp || 0);
+                gainFactionReputation(quest.successReward?.rep || {}, 1);
+                state.statusMessage = `${state.hero.name} returned victorious from ${quest.name}.`;
+                addLog(`Expedition success: ${quest.name}.`);
+            } else {
+                const penalty = quest.failPenalty || {};
+                Object.entries(penalty).forEach(([key, val]) => {
+                    if (key === 'happiness' || key === 'population') return;
+                    state.resources[key] = Math.max(0, state.resources[key] - val);
+                });
+                if (penalty.population) {
+                    state.population = Math.max(0, state.population - penalty.population);
+                }
+                if (penalty.happiness) {
+                    state.happiness = Math.max(0.1, state.happiness - penalty.happiness);
+                }
+                state.statusMessage = `${quest.name} failed. The colony mourns the losses.`;
+                addLog(`Expedition failed: ${quest.name}.`);
+            }
+            state.hero.cooldownUntilTick = state.ticks + 20;
+            state.activeExpedition = null;
+        }
+
         // --------- Mechanics ---------
         function getBuildingCost(id, count) {
             const def = BUILDING_DEFS[id];
@@ -1135,8 +1948,25 @@
                 politicianMult += 0.3 * dipLv;
             }
 
+            const policyEffects = getPolicyEffects();
+            const heroBonuses = getHeroBonuses();
+            const factionPassives = getFactionPassiveEffects();
+            const weather = state.calendar?.weatherEffects || {};
+
+            guardMult += policyEffects.guardMultiplier || 0;
+            securityFlat += (policyEffects.securityFlat || 0) + (heroBonuses.securityFlat || 0) + (factionPassives.securityFlat || 0);
+            securityFlat += weather.securityFlat || 0;
+            const temporaryBuff = (state.temporaryBuffs?.securityUntilTick || 0) > state.ticks
+                ? (state.temporaryBuffs.securityFlat || 0)
+                : 0;
+            securityFlat += temporaryBuff;
+
+            securityFlat += state.hero.level * 0.15;
+            politicianMult += (policyEffects.politicsFlat || 0) * 0.03;
+            const politicsFlat = (policyEffects.politicsFlat || 0) + (factionPassives.politicsFlat || 0) + (weather.politicsFlat || 0);
+
             const securityScore = guardBase * guardMult + securityFlat;
-            const politicsScore = politicianBase * politicianMult;
+            const politicsScore = politicianBase * politicianMult + politicsFlat;
             return { securityScore, politicsScore };
         }
 
@@ -1161,6 +1991,10 @@
                 guard: 1,
                 politician: 1,
             };
+            const policyEffects = getPolicyEffects();
+            const heroBonuses = getHeroBonuses();
+            const factionPassives = getFactionPassiveEffects();
+            const weather = state.calendar?.weatherEffects || {};
 
             // from buildings
             Object.entries(state.buildings).forEach(([id, count]) => {
@@ -1199,6 +2033,19 @@
                 globalMult *= 1 + 0.05 * legacyLv;
             }
 
+            globalMult += (policyEffects.globalMultiplier || 0) + (heroBonuses.globalMultiplier || 0) + (weather.globalMultiplier || 0);
+            jobMult.farmer += (policyEffects.foodMultiplier || 0) + (weather.foodMultiplier || 0);
+            jobMult.lumberjack += (policyEffects.woodMultiplier || 0) + (weather.woodMultiplier || 0);
+            jobMult.miner += (policyEffects.stoneMultiplier || 0) + (policyEffects.metalMultiplier || 0);
+            jobMult.scientist += (policyEffects.scienceMultiplier || 0) + (heroBonuses.scienceMultiplier || 0) + (factionPassives.scienceMultiplier || 0) + (weather.scienceMultiplier || 0);
+            jobMult.engineer += (policyEffects.energyMultiplier || 0);
+            foodConsumptionMult += (policyEffects.foodConsumptionMultiplier || 0) + (weather.foodConsumptionMultiplier || 0);
+
+            globalMult = Math.max(0.2, globalMult);
+            Object.keys(jobMult).forEach(k => {
+                jobMult[k] = Math.max(0.2, jobMult[k]);
+            });
+
             // job outputs
             Object.entries(JOB_DEFS).forEach(([id, def]) => {
                 const count = state.jobs[id] || 0;
@@ -1208,12 +2055,17 @@
                     rates[res] += base * count * mult;
                 });
             });
+            Object.entries(factionPassives.resourcesPerTick || {}).forEach(([res, val]) => {
+                rates[res] += val;
+            });
 
             // energy coverage affects global multiplier after base calculation
             // compute energy production and demand
             const energyProduction = rates.energy; // from engineers + buildings
             const buildingCount = Object.values(state.buildings).reduce((a, b) => a + b, 0);
-            const energyDemand = state.population * 0.2 + buildingCount * 0.15; // simple heuristic
+            let energyDemand = state.population * 0.2 + buildingCount * 0.15; // simple heuristic
+            energyDemand *= 1 + (policyEffects.energyDemandMultiplier || 0) + (weather.energyDemandMultiplier || 0);
+            energyDemand = Math.max(0, energyDemand);
             let energyRatio = 1;
             if (energyDemand > 0) {
                 energyRatio = energyProduction / energyDemand;
@@ -1417,6 +2269,11 @@
             }
 
             state.ticks++;
+            updateSeasonAndWeather();
+            processExpedition();
+            if ((state.temporaryBuffs?.securityUntilTick || 0) <= state.ticks) {
+                state.temporaryBuffs.securityFlat = 0;
+            }
 
             // construction
             processConstructionQueue();
@@ -1444,6 +2301,7 @@
                 const growthChance = 0.1 + 0.02 * (computeColonyLevel(state.population) - 1);
                 if (Math.random() < growthChance) {
                     state.population++;
+                    gainFactionReputation({ riverGuild: 0.6 }, 1);
                     state.statusMessage = 'New colonist has joined your settlement.';
                     addLog("A new colonist arrives, drawn by your colony's prospects.");
                 }
@@ -1455,6 +2313,8 @@
             let happiness = 1.0;
             if (!foodOk) happiness -= 0.25;
             if (!housingOk) happiness -= 0.2;
+            happiness += getPolicyEffects().happinessFlat || 0;
+            happiness += state.calendar?.weatherEffects?.happinessFlat || 0;
             // slight bonus from safe & well-run colony
             const { securityScore, politicsScore } = computeSecurityAndPolitics();
             happiness += Math.min(0.15, (securityScore + politicsScore) * 0.01);
@@ -1477,6 +2337,7 @@
 
             // random events
             tryTriggerRandomEvent();
+            gainFactionReputation({ riverGuild: 0.04, ironLegion: 0.03, sunAcademy: 0.04 }, 1);
 
             // victory
             if (checkVictoryCondition()) {
@@ -1514,6 +2375,7 @@
                 totalPrestigePoints: state.totalPrestigePoints + gained,
                 prestigeCount: state.prestigeCount + 1,
                 prestigeUpgrades: { ...state.prestigeUpgrades },
+                hero: state.hero ? JSON.parse(JSON.stringify(state.hero)) : createDefaultHero(),
             };
 
             state = DEFAULT_STATE();
@@ -1521,6 +2383,7 @@
             state.totalPrestigePoints = oldMeta.totalPrestigePoints;
             state.prestigeCount = oldMeta.prestigeCount;
             state.prestigeUpgrades = oldMeta.prestigeUpgrades;
+            state.hero = oldMeta.hero;
 
             applyPrestigeStartBonuses();
             applyBuildingEffects();
@@ -1580,6 +2443,9 @@
             updateText(el.statusMessage, state.statusMessage || '');
             updateText(el.ticks, state.ticks.toString());
             updateText(el.prestigeCount, state.prestigeCount.toString());
+            updateText(el.worldYear, (state.calendar?.year || 1).toString());
+            updateText(el.seasonName, getSeasonName());
+            updateText(el.weatherName, state.calendar?.weatherName || 'Clear');
         }
 
         function renderBuildings() {
@@ -1699,6 +2565,146 @@
             });
         }
 
+        function renderPolicies() {
+            Object.values(POLICY_DEFS).forEach(policy => {
+                const btn = document.getElementById(`policyBtn-${policy.id}`);
+                if (!btn) return;
+                const unlocked = computeColonyLevel(state.population) >= policy.unlockAt;
+                if (!unlocked) {
+                    btn.textContent = `Locked (Lv ${policy.unlockAt})`;
+                    btn.disabled = true;
+                    btn.classList.add('btn-disabled');
+                    return;
+                }
+                const active = !!state.activePolicies[policy.id];
+                btn.textContent = active ? 'Deactivate Policy' : 'Activate Policy';
+                btn.disabled = false;
+                btn.classList.remove('btn-disabled');
+            });
+        }
+
+        function renderHero() {
+            const hero = state.hero;
+            const stats = getHeroStats();
+            updateText(el.heroIdentity, `${hero.name} the ${hero.title}`);
+            updateText(el.heroLevel, `Lv ${hero.level}`);
+            updateText(el.heroXp, `${fmt(hero.xp, 0)} / ${fmt(hero.xpToNext, 0)}`);
+            updateText(el.heroStats, `ATK ${fmt(stats.attack, 0)} DEF ${fmt(stats.defense, 0)} INT ${fmt(stats.intellect, 0)}`);
+            updateText(el.heroPerkPoints, hero.perkPoints.toString());
+            const heroReady = !state.activeExpedition && state.ticks >= hero.cooldownUntilTick;
+            updateText(el.heroStatus, heroReady ? 'Ready' : (state.activeExpedition ? 'On expedition' : `Recovering (${hero.cooldownUntilTick - state.ticks} ticks)`));
+
+            Object.values(HERO_GEAR_DEFS).forEach(gear => {
+                const btn = document.getElementById(`heroGearBtn-${gear.id}`);
+                if (!btn) return;
+                const owned = !!hero.gearOwned[gear.id];
+                const affordable = canAfford(gear.cost);
+                const costText = Object.entries(gear.cost).map(([res, amt]) => `${fmt(amt, 0)} ${res}`).join(', ');
+                if (owned) {
+                    btn.textContent = `${gear.name} (Owned)`;
+                    btn.disabled = true;
+                    btn.classList.add('btn-disabled');
+                } else {
+                    btn.textContent = `${gear.name} — ${gear.description} [${costText}]`;
+                    btn.disabled = !affordable;
+                    if (btn.disabled) btn.classList.add('btn-disabled');
+                    else btn.classList.remove('btn-disabled');
+                }
+            });
+
+            Object.values(HERO_PERK_DEFS).forEach(perk => {
+                const btn = document.getElementById(`heroPerkBtn-${perk.id}`);
+                if (!btn) return;
+                const lvl = hero.perks[perk.id] || 0;
+                const maxed = lvl >= perk.maxLevel;
+                btn.textContent = `${perk.name} Lv ${lvl}/${perk.maxLevel} — ${perk.description}`;
+                btn.disabled = maxed || hero.perkPoints <= 0;
+                if (btn.disabled) btn.classList.add('btn-disabled');
+                else btn.classList.remove('btn-disabled');
+            });
+        }
+
+        function renderFactions() {
+            Object.values(FACTION_DEFS).forEach(faction => {
+                const data = state.factions[faction.id];
+                const repEl = document.getElementById(`factionRep-${faction.id}`);
+                const actionBtn = document.getElementById(`factionActionBtn-${faction.id}`);
+                if (repEl) {
+                    repEl.textContent = `Rep ${fmt(data.reputation, 1)}`;
+                }
+                if (actionBtn) {
+                    const action = faction.action;
+                    const cooldownLeft = Math.max(0, (data.lastActionTick + action.cooldown) - state.ticks);
+                    const canUse = data.reputation >= action.minRep && cooldownLeft <= 0;
+                    actionBtn.textContent = `${action.name} (min rep ${action.minRep}, cost ${action.repCost})${cooldownLeft > 0 ? ` — CD ${cooldownLeft}` : ''}`;
+                    actionBtn.disabled = !canUse;
+                    if (actionBtn.disabled) actionBtn.classList.add('btn-disabled');
+                    else actionBtn.classList.remove('btn-disabled');
+                }
+            });
+        }
+
+        function renderExpeditions() {
+            Object.values(QUEST_DEFS).forEach(quest => {
+                const btn = document.getElementById(`questBtn-${quest.id}`);
+                const meta = document.getElementById(`questMeta-${quest.id}`);
+                if (!btn || !meta) return;
+                const unlocked = state.hero.level >= quest.unlockLevel;
+                const canPay = canAfford(quest.cost);
+                const heroReady = !state.activeExpedition && state.ticks >= state.hero.cooldownUntilTick;
+                const chance = getQuestSuccessChance(quest);
+                if (!unlocked) {
+                    btn.textContent = `Locked (Hero Lv ${quest.unlockLevel})`;
+                    btn.disabled = true;
+                    btn.classList.add('btn-disabled');
+                } else {
+                    btn.textContent = state.activeExpedition?.id === quest.id ? 'In Progress' : 'Launch';
+                    btn.disabled = !heroReady || !canPay;
+                    if (btn.disabled) btn.classList.add('btn-disabled');
+                    else btn.classList.remove('btn-disabled');
+                }
+                meta.textContent = `Duration ${quest.duration} ticks · Est. success ${Math.round(chance * 100)}% · Cost: ${Object.entries(quest.cost).map(([res, amt]) => `${fmt(amt, 0)} ${res}`).join(', ')}`;
+            });
+
+            if (!state.activeExpedition) {
+                updateText(el.activeExpeditionText, 'No expedition is currently underway.');
+                if (el.activeExpeditionProgress) el.activeExpeditionProgress.style.width = '0%';
+                updateText(el.expeditionOutcomeHint, 'Successful missions grant hero XP and faction reputation.');
+                return;
+            }
+
+            const active = state.activeExpedition;
+            const done = Math.max(0, active.total - active.remaining);
+            const pct = Math.max(0, Math.min(100, (done / active.total) * 100));
+            updateText(el.activeExpeditionText, `${active.name} underway (${active.remaining} ticks remaining).`);
+            if (el.activeExpeditionProgress) el.activeExpeditionProgress.style.width = `${pct.toFixed(1)}%`;
+            updateText(el.expeditionOutcomeHint, `Projected success: ${Math.round(active.successChance * 100)}%`);
+        }
+
+        function renderRoadmap() {
+            if (!el.roadmapContainer) return;
+            el.roadmapContainer.innerHTML = '';
+            const topFive = FEATURE_ROADMAP.slice(0, 5);
+            const draftTen = FEATURE_ROADMAP.slice(5);
+            const addGroup = (title, items) => {
+                const section = document.createElement('div');
+                section.className = 'border border-slate-800 rounded p-2 bg-slate-900/40';
+                const h = document.createElement('h3');
+                h.className = 'font-semibold text-slate-200 text-[0.75rem] mb-1';
+                h.textContent = title;
+                section.appendChild(h);
+                items.forEach((feature, idx) => {
+                    const row = document.createElement('div');
+                    row.className = 'text-[0.65rem] text-slate-300 mb-1';
+                    row.textContent = `${idx + 1}. ${feature.name} [Weight ${feature.weight}] — ${feature.summary}`;
+                    section.appendChild(row);
+                });
+                el.roadmapContainer.appendChild(section);
+            };
+            addGroup('Implemented Priorities (Top 5)', topFive);
+            addGroup('Draft Backlog (Next 10)', draftTen);
+        }
+
         function renderAll() {
             renderResourcesAndRates();
             renderOverview();
@@ -1706,6 +2712,11 @@
             renderResearch();
             renderJobs();
             renderPrestige();
+            renderPolicies();
+            renderHero();
+            renderFactions();
+            renderExpeditions();
+            renderRoadmap();
         }
 
         // --------- Save / Load / Reset ---------
@@ -1737,6 +2748,35 @@
                 Object.keys(fresh.prestigeUpgrades).forEach(id => {
                     if (state.prestigeUpgrades[id] == null) state.prestigeUpgrades[id] = 0;
                 });
+                if (!state.activePolicies || typeof state.activePolicies !== 'object') state.activePolicies = { ...fresh.activePolicies };
+                Object.keys(fresh.activePolicies).forEach(id => {
+                    if (state.activePolicies?.[id] == null) state.activePolicies[id] = false;
+                });
+                if (!state.calendar || typeof state.calendar !== 'object') state.calendar = { ...fresh.calendar };
+                if (state.calendar.year == null) state.calendar.year = 1;
+                if (state.calendar.seasonIndex == null) state.calendar.seasonIndex = 0;
+                if (state.calendar.ticksIntoSeason == null) state.calendar.ticksIntoSeason = 0;
+                if (state.calendar.weatherName == null) state.calendar.weatherName = 'Clear';
+                if (!state.calendar.weatherEffects || typeof state.calendar.weatherEffects !== 'object') state.calendar.weatherEffects = {};
+                if (!state.hero || typeof state.hero !== 'object') state.hero = createDefaultHero();
+                const freshHero = createDefaultHero();
+                state.hero.baseStats = Object.assign(freshHero.baseStats, state.hero.baseStats || {});
+                state.hero.gearOwned = Object.assign(freshHero.gearOwned, state.hero.gearOwned || {});
+                state.hero.perks = Object.assign(freshHero.perks, state.hero.perks || {});
+                if (state.hero.name == null) state.hero.name = freshHero.name;
+                if (state.hero.title == null) state.hero.title = freshHero.title;
+                if (state.hero.level == null) state.hero.level = freshHero.level;
+                if (state.hero.xp == null) state.hero.xp = freshHero.xp;
+                if (state.hero.xpToNext == null) state.hero.xpToNext = freshHero.xpToNext;
+                if (state.hero.perkPoints == null) state.hero.perkPoints = freshHero.perkPoints;
+                if (state.hero.cooldownUntilTick == null) state.hero.cooldownUntilTick = freshHero.cooldownUntilTick;
+                ensureFactionState();
+                if (!state.temporaryBuffs || typeof state.temporaryBuffs !== 'object') state.temporaryBuffs = { ...fresh.temporaryBuffs };
+                if (state.temporaryBuffs.securityFlat == null) state.temporaryBuffs.securityFlat = 0;
+                if (state.temporaryBuffs.securityUntilTick == null) state.temporaryBuffs.securityUntilTick = 0;
+                if (!state.activeExpedition || !QUEST_DEFS[state.activeExpedition.id]) {
+                    state.activeExpedition = null;
+                }
                 if (state.lastBabyTick == null) state.lastBabyTick = 0;
                 if (state.lastEventTick == null) state.lastEventTick = 0;
                 if (!Array.isArray(state.constructionQueue)) state.constructionQueue = [];
@@ -1819,6 +2859,13 @@
             createBuildingRows();
             createResearchRows();
             createPrestigeRows();
+            createPolicyRows();
+            createHeroControls();
+            createFactionRows();
+            createQuestRows();
+            if (!state.calendar?.weatherName || state.calendar.weatherName === 'Clear') {
+                rollWeatherForCurrentSeason();
+            }
             applyPrestigeStartBonuses();
             applyBuildingEffects();
             initUIEvents();
