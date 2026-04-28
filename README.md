@@ -92,6 +92,7 @@ The project currently has **16 draft features** (10 original draft backlog + 5 a
 
 | Pair | Features (2) | Pair Weight | Update Name | Version |
 |---|---|---:|---|---|
+| 0 | Game Tutorial for new players *(shipped)* | 16 | **Back to School** | `v0.8.9` |
 | 1 | District Zoning + Supply Chains | 14 | **Steel & Streets** | `v0.9.0` |
 | 2 | Character Traits for Colonists + Guilds & Internal Politics | 12 | **Faces of the City** | `v0.9.1` |
 | 3 | Espionage Layer + Crisis Council | 11 | **Shadows & Sirens** | `v0.9.2` |
