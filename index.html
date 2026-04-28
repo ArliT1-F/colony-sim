@@ -733,42 +733,42 @@
                 name: 'Rationing Act',
                 description: 'Lower food use but people dislike strict ration limits.',
                 unlockAt: 2,
-                effects: { foodConsumptionMultiplier: -0.2, happinessFlat: -0.08 },
+                effects: { foodConsumptionMultiplier: -0.16, happinessFlat: -0.06 },
             },
             industrialMandate: {
                 id: 'industrialMandate',
                 name: 'Industrial Mandate',
                 description: 'Boost raw production while reducing scientific focus.',
                 unlockAt: 3,
-                effects: { woodMultiplier: 0.18, stoneMultiplier: 0.18, metalMultiplier: 0.2, scienceMultiplier: -0.12 },
+                effects: { woodMultiplier: 0.14, stoneMultiplier: 0.14, metalMultiplier: 0.16, scienceMultiplier: -0.1 },
             },
             scholarshipFund: {
                 id: 'scholarshipFund',
                 name: 'Scholarship Fund',
                 description: 'Invest in schools to accelerate science output.',
                 unlockAt: 3,
-                effects: { scienceMultiplier: 0.28, foodConsumptionMultiplier: 0.05 },
+                effects: { scienceMultiplier: 0.22, foodConsumptionMultiplier: 0.04 },
             },
             greenInitiative: {
                 id: 'greenInitiative',
                 name: 'Greenhouse Initiative',
                 description: 'Improves food resilience at the cost of extra energy demand.',
                 unlockAt: 4,
-                effects: { foodMultiplier: 0.22, energyDemandMultiplier: 0.12 },
+                effects: { foodMultiplier: 0.18, energyDemandMultiplier: 0.1 },
             },
             civilGuard: {
                 id: 'civilGuard',
                 name: 'Civil Guard Program',
                 description: 'Civil defense drills improve safety but reduce morale.',
                 unlockAt: 4,
-                effects: { securityFlat: 4, guardMultiplier: 0.2, happinessFlat: -0.04 },
+                effects: { securityFlat: 3, guardMultiplier: 0.16, happinessFlat: -0.03 },
             },
             openDiplomacy: {
                 id: 'openDiplomacy',
                 name: 'Open Diplomacy Charter',
                 description: 'Improves political capital and faction relationship growth.',
                 unlockAt: 5,
-                effects: { politicsFlat: 3, repGainMultiplier: 0.25 },
+                effects: { politicsFlat: 2, repGainMultiplier: 0.18 },
             },
         };
 
@@ -960,6 +960,7 @@
             { name: 'Artifact Crafting', weight: 4, summary: 'Rare expedition relics forge unique empire-wide passives.' },
             { name: 'Ecology & Pollution', weight: 4, summary: 'Industrial growth creates environmental debt that must be mitigated.' },
         ];
+        const POLICY_BASE_SLOTS = 1;
 
         function createDefaultHero() {
             return {
