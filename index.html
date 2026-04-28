@@ -370,8 +370,8 @@
         const TICK_DEFAULT_MS = 1000;
         const AUTOSAVE_INTERVAL_MS = 30000;
         const BABY_COOLDOWN_TICKS = 50; // minimum ticks between births
-        const EVENT_BASE_CHANCE = 0.04; // base chance per tick to try an event
-        const EVENT_COOLDOWN_TICKS = 70; // minimum ticks between events
+        const EVENT_BASE_CHANCE = 0.03; // base chance per tick to try an event
+        const EVENT_COOLDOWN_TICKS = 85; // minimum ticks between events
         const SAVE_KEY = 'colonyIncrementalSave_v2';
         const SEASON_LENGTH_TICKS = 120;
         const SEASONS = ['Spring', 'Summer', 'Autumn', 'Winter'];
@@ -410,19 +410,19 @@
                 id: 'lumberjack',
                 name: 'Lumberjack',
                 description: 'Produces Wood used for basic construction.',
-                baseOutput: { wood: 1.5 },
+                baseOutput: { wood: 1.6 },
             },
             miner: {
                 id: 'miner',
                 name: 'Miner',
                 description: 'Extracts Stone and small amounts of Metal.',
-                baseOutput: { stone: 1, metal: 0.2 },
+                baseOutput: { stone: 1.1, metal: 0.24 },
             },
             scientist: {
                 id: 'scientist',
                 name: 'Scientist',
                 description: 'Generates Science for research.',
-                baseOutput: { science: 0.7 },
+                baseOutput: { science: 0.8 },
             },
             engineer: {
                 id: 'engineer',
@@ -579,7 +579,7 @@
                 id: 'improvedTools',
                 name: 'Improved Tools',
                 description: 'All resource production +15%.',
-                cost: { science: 40 },
+                cost: { science: 35 },
                 effects: { globalMultiplier: 0.15 },
                 requires: [],
             },
@@ -587,7 +587,7 @@
                 id: 'agriculture',
                 name: 'Advanced Agriculture',
                 description: 'Farmers produce +50% Food.',
-                cost: { science: 80 },
+                cost: { science: 70 },
                 effects: { farmerMultiplier: 0.5 },
                 requires: ['improvedTools'],
             },
@@ -595,7 +595,7 @@
                 id: 'housing',
                 name: 'Efficient Housing',
                 description: 'Population cap from housing +30%.',
-                cost: { science: 70 },
+                cost: { science: 60 },
                 effects: { housingMultiplier: 0.3 },
                 requires: ['improvedTools'],
             },
@@ -603,7 +603,7 @@
                 id: 'logistics',
                 name: 'Logistics & Planning',
                 description: 'Food consumption per colonist -15%.',
-                cost: { science: 90 },
+                cost: { science: 80 },
                 effects: { foodConsumptionMult: -0.15 },
                 requires: ['agriculture'],
             },
@@ -611,7 +611,7 @@
                 id: 'energyTech',
                 name: 'Energy Technology',
                 description: 'Energy output from Engineers +60%.',
-                cost: { science: 120 },
+                cost: { science: 105 },
                 effects: { engineerMultiplier: 0.6 },
                 requires: ['logistics'],
             },
@@ -619,7 +619,7 @@
                 id: 'forestry',
                 name: 'Efficient Forestry',
                 description: 'Lumberjacks produce +50% Wood.',
-                cost: { science: 70 },
+                cost: { science: 60 },
                 effects: { lumberjackMultiplier: 0.5 },
                 requires: ['improvedTools'],
             },
@@ -627,7 +627,7 @@
                 id: 'mining',
                 name: 'Deep Mining',
                 description: 'Miners produce +50% Stone and Metal.',
-                cost: { science: 90 },
+                cost: { science: 75 },
                 effects: { minerMultiplier: 0.5 },
                 requires: ['improvedTools'],
             },
@@ -635,7 +635,7 @@
                 id: 'education',
                 name: 'Education',
                 description: 'Scientists produce +60% Science.',
-                cost: { science: 110 },
+                cost: { science: 95 },
                 effects: { scientistMultiplier: 0.6 },
                 requires: ['housing'],
             },
@@ -643,7 +643,7 @@
                 id: 'festivalCulture',
                 name: 'Festival Culture',
                 description: 'All resource production +10%.',
-                cost: { science: 120 },
+                cost: { science: 105 },
                 effects: { globalMultiplier: 0.1 },
                 requires: ['logistics'],
             },
@@ -651,7 +651,7 @@
                 id: 'medicine',
                 name: 'Community Medicine',
                 description: 'Food consumption per colonist -10%.',
-                cost: { science: 130 },
+                cost: { science: 110 },
                 effects: { foodConsumptionMult: -0.10 },
                 requires: ['housing'],
             },
@@ -659,7 +659,7 @@
                 id: 'securityTheory',
                 name: 'Security Doctrine',
                 description: 'Guards are 50% more effective against crime and hordes.',
-                cost: { science: 150 },
+                cost: { science: 125 },
                 effects: { guardMultiplier: 0.5 },
                 requires: ['education'],
             },
@@ -667,7 +667,7 @@
                 id: 'civicPlanning',
                 name: 'Civic Planning',
                 description: 'Politicians are 50% more effective at preventing wars and securing deals.',
-                cost: { science: 160 },
+                cost: { science: 135 },
                 effects: { politicianMultiplier: 0.5 },
                 requires: ['education'],
             },
@@ -675,7 +675,7 @@
                 id: 'smartGrid',
                 name: 'Smart Grid',
                 description: 'Energy coverage provides stronger bonuses to all production.',
-                cost: { science: 200 },
+                cost: { science: 170 },
                 effects: { energyBonusMultiplier: 0.25 },
                 requires: ['energyTech'],
             },
@@ -683,7 +683,7 @@
                 id: 'megaEngineering',
                 name: 'Mega Engineering',
                 description: 'Allows construction of the Capital Megastructure.',
-                cost: { science: 600 },
+                cost: { science: 500 },
                 effects: {},
                 requires: ['smartGrid', 'civicPlanning'],
             },
@@ -1809,7 +1809,7 @@
         // --------- Mechanics ---------
         function getBuildingCost(id, count) {
             const def = BUILDING_DEFS[id];
-            const multiplier = Math.pow(1.18, count); // exponential scaling based on completed buildings
+            const multiplier = Math.pow(1.15, count); // exponential scaling based on completed buildings
             const cost = {};
             Object.entries(def.baseCost).forEach(([res, base]) => {
                 cost[res] = Math.ceil(base * multiplier);
@@ -1832,7 +1832,7 @@
             const base = def.buildTimeBase || 12;
             const existing = state.buildings[buildingId] || 0;
             const queued = buildingUnderConstructionCount(buildingId);
-            let time = base * (1 + 0.06 * (existing + queued));
+            let time = base * (1 + 0.05 * (existing + queued));
             const veLevel = state.prestigeUpgrades.veteranEngineers || 0;
             if (veLevel > 0) {
                 const factor = Math.max(0.4, 1 - 0.06 * veLevel);
@@ -1982,7 +1982,7 @@
             };
 
             let globalMult = 1;
-            let foodConsumptionMult = 0.25;
+            let foodConsumptionMult = 0.34;
             const jobMult = {
                 farmer: 1,
                 lumberjack: 1,
@@ -2064,7 +2064,7 @@
             // compute energy production and demand
             const energyProduction = rates.energy; // from engineers + buildings
             const buildingCount = Object.values(state.buildings).reduce((a, b) => a + b, 0);
-            let energyDemand = state.population * 0.2 + buildingCount * 0.15; // simple heuristic
+            let energyDemand = state.population * 0.18 + buildingCount * 0.12; // simple heuristic
             energyDemand *= 1 + (policyEffects.energyDemandMultiplier || 0) + (weather.energyDemandMultiplier || 0);
             energyDemand = Math.max(0, energyDemand);
             let energyRatio = 1;
@@ -2358,14 +2358,14 @@
             const researchDone = Object.values(state.research).filter(v => v).length;
             const colonyLevel = computeColonyLevel(pop);
             // Simple threshold that encourages a bit of progress but not full completion
-            return colonyLevel >= 3 && totalBuildings >= 8 && researchDone >= 2;
+            return colonyLevel >= 4 && totalBuildings >= 12 && researchDone >= 3;
         }
 
         function estimatePrestigePointsGained() {
             const pop = state.population;
             const totalBuildings = Object.values(state.buildings).reduce((a, b) => a + b, 0);
             const researchDone = Object.values(state.research).filter(v => v).length;
-            const value = Math.floor(pop / 25 + totalBuildings / 10 + researchDone / 4);
+            const value = Math.floor(pop / 22 + totalBuildings / 9 + researchDone / 3.5);
             return Math.max(1, value);
         }
 
