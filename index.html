@@ -204,6 +204,22 @@
                 </div>
             </section>
 
+            <!-- District Zoning -->
+            <section class="grid md:grid-cols-1 gap-4 text-xs">
+                <div class="border border-slate-800 rounded-lg bg-slate-950/70 p-3 flex flex-col gap-2">
+                    <h2 class="text-sm font-semibold text-slate-200 mb-1">District Zoning</h2>
+                    <p class="text-[0.7rem] text-slate-400">Specialized districts grant focused bonuses, building
+                        adjacency perks, and ongoing upkeep pressure.</p>
+                    <div class="flex items-center justify-between text-[0.65rem] text-slate-400">
+                        <span>District Capacity</span>
+                        <span id="districtCapacity" class="font-mono">0/0</span>
+                    </div>
+                    <p id="districtEffectsHint" class="text-[0.65rem] text-slate-500">No district bonuses active yet.
+                    </p>
+                    <div id="districtsContainer" class="grid md:grid-cols-2 gap-2"></div>
+                </div>
+            </section>
+
             <!-- New Systems: Policies, Hero, Diplomacy -->
             <section class="grid md:grid-cols-3 gap-4 text-xs">
                 <!-- Policies -->
@@ -273,7 +289,7 @@
             <section class="grid md:grid-cols-1 gap-4 text-xs">
                 <div class="border border-slate-800 rounded-lg bg-slate-950/70 p-3 flex flex-col gap-2">
                     <h2 class="text-sm font-semibold text-slate-200 mb-1">Feature Roadmap</h2>
-                    <p class="text-[0.7rem] text-slate-400">Weighted feature priorities with the top five implemented in
+                    <p class="text-[0.7rem] text-slate-400">Weighted feature priorities with the top six implemented in
                         this build.</p>
                     <div id="roadmapContainer" class="grid md:grid-cols-2 gap-2"></div>
                 </div>
@@ -806,6 +822,76 @@
             },
         };
 
+        const DISTRICT_DEFS = {
+            agrarian: {
+                id: 'agrarian',
+                name: 'Agrarian Belt',
+                description: 'Food districts with farm adjacency and light civic bonuses.',
+                unlockAt: 3,
+                baseCost: { wood: 85, stone: 30 },
+                costScale: 1.22,
+                upkeepPerTick: { energy: 0.45 },
+                effectsPerDistrict: { foodMultiplier: 0.13, happinessFlat: 0.012 },
+                adjacencyBonuses: [
+                    { buildingId: 'farm', target: 'foodMultiplier', perBuilding: 0.012, maxBonus: 0.12 },
+                ],
+                synergyBonuses: [
+                    { districtId: 'civic', target: 'happinessFlat', perDistrict: 0.004, maxBonus: 0.03 },
+                ],
+            },
+            industrial: {
+                id: 'industrial',
+                name: 'Industrial Ward',
+                description: 'Raw material specialization with heavy energy upkeep.',
+                unlockAt: 4,
+                baseCost: { wood: 95, stone: 70, metal: 20 },
+                costScale: 1.24,
+                upkeepPerTick: { energy: 0.9, food: 0.3 },
+                effectsPerDistrict: { woodMultiplier: 0.08, stoneMultiplier: 0.1, metalMultiplier: 0.12, scienceMultiplier: -0.02 },
+                adjacencyBonuses: [
+                    { buildingId: 'sawmill', target: 'woodMultiplier', perBuilding: 0.015, maxBonus: 0.14 },
+                    { buildingId: 'mine', target: 'stoneMultiplier', perBuilding: 0.018, maxBonus: 0.16 },
+                ],
+                synergyBonuses: [
+                    { districtId: 'research', target: 'scienceMultiplier', perDistrict: 0.004, maxBonus: 0.03 },
+                ],
+            },
+            research: {
+                id: 'research',
+                name: 'Scholars Quarter',
+                description: 'Knowledge hub that scales with laboratories and diplomacy.',
+                unlockAt: 4,
+                baseCost: { wood: 80, stone: 60, science: 90 },
+                costScale: 1.23,
+                upkeepPerTick: { energy: 0.7, food: 0.15 },
+                effectsPerDistrict: { scienceMultiplier: 0.14, politicsFlat: 0.45 },
+                adjacencyBonuses: [
+                    { buildingId: 'lab', target: 'scienceMultiplier', perBuilding: 0.02, maxBonus: 0.18 },
+                    { buildingId: 'townHall', target: 'politicsFlat', perBuilding: 0.2, maxBonus: 1.2 },
+                ],
+                synergyBonuses: [
+                    { districtId: 'industrial', target: 'scienceMultiplier', perDistrict: 0.004, maxBonus: 0.03 },
+                ],
+            },
+            civic: {
+                id: 'civic',
+                name: 'Civic Commons',
+                description: 'Administrative district that strengthens morale and order.',
+                unlockAt: 5,
+                baseCost: { wood: 110, stone: 100, science: 60 },
+                costScale: 1.25,
+                upkeepPerTick: { food: 0.35, energy: 0.35 },
+                effectsPerDistrict: { happinessFlat: 0.02, securityFlat: 1.3, politicsFlat: 0.8 },
+                adjacencyBonuses: [
+                    { buildingId: 'townHall', target: 'politicsFlat', perBuilding: 0.35, maxBonus: 2.2 },
+                    { buildingId: 'barracks', target: 'securityFlat', perBuilding: 0.28, maxBonus: 1.8 },
+                ],
+                synergyBonuses: [
+                    { districtId: 'agrarian', target: 'happinessFlat', perDistrict: 0.005, maxBonus: 0.035 },
+                ],
+            },
+        };
+
         const HERO_GEAR_DEFS = {
             steelBlade: {
                 id: 'steelBlade',
@@ -978,21 +1064,21 @@
         };
 
         const FEATURE_ROADMAP = [
-            { name: 'Faction Reputation & Diplomacy Actions', weight: 10, summary: 'Persistent faction standings unlock strategic aid and temporary power spikes.' },
-            { name: 'Hero RPG Progression', weight: 9, summary: 'A leveling hero with gear/perks meaningfully alters economy, security, and expeditions.' },
-            { name: 'Expedition Quest Board', weight: 9, summary: 'Risk/reward missions add directed gameplay loops with XP, loot, and political outcomes.' },
-            { name: 'Policy & Law System', weight: 8, summary: 'Toggleable laws introduce macro tradeoffs and player identity for each run.' },
-            { name: 'Season + Weather Simulation', weight: 8, summary: 'World cadence shifts production and pressure over time, deepening planning gameplay.' },
-            { name: 'District Zoning', weight: 7, summary: 'Specialized urban districts with adjacency bonuses and upkeep costs.' },
-            { name: 'Supply Chains', weight: 7, summary: 'Intermediate goods (tools, medicine, alloys) consumed by advanced production.' },
-            { name: 'Character Traits for Colonists', weight: 6, summary: 'Named citizens with traits affecting job output and event outcomes.' },
-            { name: 'Guilds & Internal Politics', weight: 6, summary: 'Internal factions demand influence and create policy pressure/events.' },
-            { name: 'Espionage Layer', weight: 6, summary: 'Scouting and sabotage actions against threats with counter-intelligence defense.' },
-            { name: 'City Projects', weight: 5, summary: 'Large multi-phase public works with milestone bonuses and narrative beats.' },
-            { name: 'Naval Logistics', weight: 5, summary: 'Harbors, fleets, and sea trade lanes introducing a second transport economy.' },
-            { name: 'Crisis Council', weight: 5, summary: 'Time-limited dilemmas requiring multi-resource responses with branching effects.' },
-            { name: 'Artifact Crafting', weight: 4, summary: 'Rare expedition relics forge unique empire-wide passives.' },
-            { name: 'Ecology & Pollution', weight: 4, summary: 'Industrial growth creates environmental debt that must be mitigated.' },
+            { name: 'Faction Reputation & Diplomacy Actions', weight: 10, shipped: true, summary: 'Persistent faction standings unlock strategic aid and temporary power spikes.' },
+            { name: 'Hero RPG Progression', weight: 9, shipped: true, summary: 'A leveling hero with gear/perks meaningfully alters economy, security, and expeditions.' },
+            { name: 'Expedition Quest Board', weight: 9, shipped: true, summary: 'Risk/reward missions add directed gameplay loops with XP, loot, and political outcomes.' },
+            { name: 'Policy & Law System', weight: 8, shipped: true, summary: 'Toggleable laws introduce macro tradeoffs and player identity for each run.' },
+            { name: 'Season + Weather Simulation', weight: 8, shipped: true, summary: 'World cadence shifts production and pressure over time, deepening planning gameplay.' },
+            { name: 'District Zoning', weight: 7, shipped: true, summary: 'Specialized urban districts with adjacency bonuses and upkeep costs.' },
+            { name: 'Supply Chains', weight: 7, shipped: false, summary: 'Intermediate goods (tools, medicine, alloys) consumed by advanced production.' },
+            { name: 'Character Traits for Colonists', weight: 6, shipped: false, summary: 'Named citizens with traits affecting job output and event outcomes.' },
+            { name: 'Guilds & Internal Politics', weight: 6, shipped: false, summary: 'Internal factions demand influence and create policy pressure/events.' },
+            { name: 'Espionage Layer', weight: 6, shipped: false, summary: 'Scouting and sabotage actions against threats with counter-intelligence defense.' },
+            { name: 'City Projects', weight: 5, shipped: false, summary: 'Large multi-phase public works with milestone bonuses and narrative beats.' },
+            { name: 'Naval Logistics', weight: 5, shipped: false, summary: 'Harbors, fleets, and sea trade lanes introducing a second transport economy.' },
+            { name: 'Crisis Council', weight: 5, shipped: false, summary: 'Time-limited dilemmas requiring multi-resource responses with branching effects.' },
+            { name: 'Artifact Crafting', weight: 4, shipped: false, summary: 'Rare expedition relics forge unique empire-wide passives.' },
+            { name: 'Ecology & Pollution', weight: 4, shipped: false, summary: 'Industrial growth creates environmental debt that must be mitigated.' },
         ];
         const POLICY_BASE_SLOTS = 1;
 
@@ -1054,6 +1140,7 @@
             prestigeCount: 0,
             prestigeUpgrades: Object.fromEntries(Object.keys(PRESTIGE_UPGRADES).map(id => [id, 0])),
             activePolicies: Object.fromEntries(Object.keys(POLICY_DEFS).map(id => [id, false])),
+            districts: Object.fromEntries(Object.keys(DISTRICT_DEFS).map(id => [id, 0])),
             calendar: {
                 year: 1,
                 seasonIndex: 0,
@@ -1116,6 +1203,9 @@
             el.buildingsContainer = document.getElementById('buildingsContainer');
             el.researchContainer = document.getElementById('researchContainer');
             el.policiesContainer = document.getElementById('policiesContainer');
+            el.districtsContainer = document.getElementById('districtsContainer');
+            el.districtCapacity = document.getElementById('districtCapacity');
+            el.districtEffectsHint = document.getElementById('districtEffectsHint');
             el.factionsContainer = document.getElementById('factionsContainer');
             el.questBoardContainer = document.getElementById('questBoardContainer');
             el.log = document.getElementById('log');
@@ -1463,6 +1553,105 @@
             return state.constructionQueue.filter(job => job.id === id).length;
         }
 
+        function ensureDistrictState() {
+            if (!state.districts || typeof state.districts !== 'object') {
+                state.districts = Object.fromEntries(Object.keys(DISTRICT_DEFS).map(id => [id, 0]));
+            }
+            Object.keys(DISTRICT_DEFS).forEach(id => {
+                const value = Number(state.districts[id] || 0);
+                state.districts[id] = Number.isFinite(value) ? Math.max(0, Math.floor(value)) : 0;
+            });
+        }
+
+        function getTotalDistrictCount() {
+            ensureDistrictState();
+            return Object.values(state.districts).reduce((acc, n) => acc + (n || 0), 0);
+        }
+
+        function getDistrictCapacity() {
+            const colonyLevel = computeColonyLevel(state.population);
+            const townHallCount = state.buildings?.townHall || 0;
+            const civicResearchBonus = state.research?.civicPlanning ? 1 : 0;
+            return Math.max(1, 1 + Math.floor(colonyLevel / 2) + Math.floor(townHallCount / 2) + civicResearchBonus);
+        }
+
+        function getDistrictSetupCost(id, currentCount) {
+            const def = DISTRICT_DEFS[id];
+            if (!def) return {};
+            const scale = Math.pow(def.costScale || 1.2, Math.max(0, currentCount || 0));
+            const out = {};
+            Object.entries(def.baseCost || {}).forEach(([res, amount]) => {
+                out[res] = Math.ceil(amount * scale);
+            });
+            return out;
+        }
+
+        function getDistrictEffects() {
+            ensureDistrictState();
+            const effects = {
+                foodMultiplier: 0,
+                woodMultiplier: 0,
+                stoneMultiplier: 0,
+                metalMultiplier: 0,
+                scienceMultiplier: 0,
+                energyMultiplier: 0,
+                globalMultiplier: 0,
+                foodConsumptionMultiplier: 0,
+                energyDemandMultiplier: 0,
+                happinessFlat: 0,
+                securityFlat: 0,
+                politicsFlat: 0,
+                guardMultiplier: 0,
+                upkeepPerTick: { food: 0, wood: 0, stone: 0, metal: 0, science: 0, energy: 0 },
+            };
+
+            Object.entries(DISTRICT_DEFS).forEach(([id, def]) => {
+                const count = state.districts[id] || 0;
+                if (!count) return;
+
+                Object.entries(def.effectsPerDistrict || {}).forEach(([key, value]) => {
+                    if (effects[key] == null) effects[key] = 0;
+                    effects[key] += value * count;
+                });
+                Object.entries(def.upkeepPerTick || {}).forEach(([res, value]) => {
+                    effects.upkeepPerTick[res] += value * count;
+                });
+                (def.adjacencyBonuses || []).forEach(adj => {
+                    const buildingCount = state.buildings?.[adj.buildingId] || 0;
+                    if (!buildingCount) return;
+                    const perDistrictBonus = Math.min(adj.maxBonus || 0, (adj.perBuilding || 0) * buildingCount);
+                    effects[adj.target] += perDistrictBonus * count;
+                });
+                (def.synergyBonuses || []).forEach(syn => {
+                    const otherDistrictCount = state.districts?.[syn.districtId] || 0;
+                    if (!otherDistrictCount) return;
+                    const perDistrictBonus = Math.min(syn.maxBonus || 0, (syn.perDistrict || 0) * otherDistrictCount);
+                    effects[syn.target] += perDistrictBonus * count;
+                });
+            });
+            return effects;
+        }
+
+        function establishDistrict(id) {
+            ensureDistrictState();
+            const def = DISTRICT_DEFS[id];
+            if (!def) return;
+            const colonyLevel = computeColonyLevel(state.population);
+            if (colonyLevel < def.unlockAt) return;
+            const currentCount = state.districts[id] || 0;
+            if (getTotalDistrictCount() >= getDistrictCapacity()) {
+                state.statusMessage = 'District capacity reached. Increase colony level or expand civic infrastructure.';
+                return;
+            }
+            const cost = getDistrictSetupCost(id, currentCount);
+            if (!canAfford(cost)) return;
+            payCost(cost);
+            state.districts[id] = currentCount + 1;
+            state.statusMessage = `District established: ${def.name}.`;
+            addLog(`District established: ${def.name}.`);
+            renderAll();
+        }
+
         // --------- UI Construction ---------
         function createJobRows() {
             el.jobsContainer.innerHTML = '';
@@ -1712,6 +1901,53 @@
                 row.appendChild(line);
 
                 el.policiesContainer.appendChild(row);
+            });
+        }
+
+        function createDistrictRows() {
+            if (!el.districtsContainer) return;
+            ensureDistrictState();
+            el.districtsContainer.innerHTML = '';
+            Object.values(DISTRICT_DEFS).forEach(def => {
+                const row = document.createElement('div');
+                row.className = 'border border-slate-800 rounded px-2 py-2 bg-slate-900/60 flex flex-col gap-1';
+
+                const top = document.createElement('div');
+                top.className = 'flex justify-between items-center gap-2';
+                const left = document.createElement('div');
+                left.className = 'flex flex-col';
+                const name = document.createElement('span');
+                name.className = 'font-semibold text-slate-200';
+                name.textContent = def.name;
+                const desc = document.createElement('span');
+                desc.className = 'text-[0.65rem] text-slate-400';
+                desc.textContent = def.description;
+                left.appendChild(name);
+                left.appendChild(desc);
+                const btn = document.createElement('button');
+                btn.id = `districtBtn-${def.id}`;
+                btn.className = 'px-2 py-1 rounded border border-cyan-700 bg-cyan-950 hover:bg-cyan-900 text-[0.65rem]';
+                btn.addEventListener('click', () => establishDistrict(def.id));
+                top.appendChild(left);
+                top.appendChild(btn);
+                row.appendChild(top);
+
+                const countLine = document.createElement('div');
+                countLine.className = 'text-[0.62rem] text-slate-400 flex justify-between';
+                countLine.innerHTML = `<span>Active</span><span id="districtCount-${def.id}" class="font-mono">0</span>`;
+                row.appendChild(countLine);
+
+                const costLine = document.createElement('div');
+                costLine.className = 'text-[0.62rem] text-slate-500';
+                costLine.id = `districtCost-${def.id}`;
+                row.appendChild(costLine);
+
+                const meta = document.createElement('div');
+                meta.className = 'text-[0.62rem] text-slate-500';
+                meta.id = `districtMeta-${def.id}`;
+                row.appendChild(meta);
+
+                el.districtsContainer.appendChild(row);
             });
         }
 
@@ -2241,10 +2477,11 @@
             const policyEffects = getPolicyEffects();
             const heroBonuses = getHeroBonuses();
             const factionPassives = getFactionPassiveEffects();
+            const districtEffects = getDistrictEffects();
             const weather = state.calendar?.weatherEffects || {};
 
-            guardMult += policyEffects.guardMultiplier || 0;
-            securityFlat += (policyEffects.securityFlat || 0) + (heroBonuses.securityFlat || 0) + (factionPassives.securityFlat || 0);
+            guardMult += (policyEffects.guardMultiplier || 0) + (districtEffects.guardMultiplier || 0);
+            securityFlat += (policyEffects.securityFlat || 0) + (heroBonuses.securityFlat || 0) + (factionPassives.securityFlat || 0) + (districtEffects.securityFlat || 0);
             securityFlat += weather.securityFlat || 0;
             const temporaryBuff = (state.temporaryBuffs?.securityUntilTick || 0) > state.ticks
                 ? (state.temporaryBuffs.securityFlat || 0)
@@ -2252,8 +2489,8 @@
             securityFlat += temporaryBuff;
 
             securityFlat += state.hero.level * 0.15;
-            politicianMult += (policyEffects.politicsFlat || 0) * 0.03;
-            const politicsFlat = (policyEffects.politicsFlat || 0) + (factionPassives.politicsFlat || 0) + (weather.politicsFlat || 0);
+            politicianMult += ((policyEffects.politicsFlat || 0) + (districtEffects.politicsFlat || 0)) * 0.03;
+            const politicsFlat = (policyEffects.politicsFlat || 0) + (factionPassives.politicsFlat || 0) + (weather.politicsFlat || 0) + (districtEffects.politicsFlat || 0);
 
             const securityScore = guardBase * guardMult + securityFlat;
             const politicsScore = politicianBase * politicianMult + politicsFlat;
@@ -2284,6 +2521,7 @@
             const policyEffects = getPolicyEffects();
             const heroBonuses = getHeroBonuses();
             const factionPassives = getFactionPassiveEffects();
+            const districtEffects = getDistrictEffects();
             const weather = state.calendar?.weatherEffects || {};
 
             // from buildings
@@ -2323,13 +2561,13 @@
                 globalMult *= 1 + 0.05 * legacyLv;
             }
 
-            globalMult += (policyEffects.globalMultiplier || 0) + (heroBonuses.globalMultiplier || 0) + (weather.globalMultiplier || 0);
-            jobMult.farmer += (policyEffects.foodMultiplier || 0) + (weather.foodMultiplier || 0);
-            jobMult.lumberjack += (policyEffects.woodMultiplier || 0) + (weather.woodMultiplier || 0);
-            jobMult.miner += (policyEffects.stoneMultiplier || 0) + (policyEffects.metalMultiplier || 0);
-            jobMult.scientist += (policyEffects.scienceMultiplier || 0) + (heroBonuses.scienceMultiplier || 0) + (factionPassives.scienceMultiplier || 0) + (weather.scienceMultiplier || 0);
-            jobMult.engineer += (policyEffects.energyMultiplier || 0);
-            foodConsumptionMult += (policyEffects.foodConsumptionMultiplier || 0) + (weather.foodConsumptionMultiplier || 0);
+            globalMult += (policyEffects.globalMultiplier || 0) + (heroBonuses.globalMultiplier || 0) + (weather.globalMultiplier || 0) + (districtEffects.globalMultiplier || 0);
+            jobMult.farmer += (policyEffects.foodMultiplier || 0) + (weather.foodMultiplier || 0) + (districtEffects.foodMultiplier || 0);
+            jobMult.lumberjack += (policyEffects.woodMultiplier || 0) + (weather.woodMultiplier || 0) + (districtEffects.woodMultiplier || 0);
+            jobMult.miner += (policyEffects.stoneMultiplier || 0) + (policyEffects.metalMultiplier || 0) + (districtEffects.stoneMultiplier || 0) + (districtEffects.metalMultiplier || 0);
+            jobMult.scientist += (policyEffects.scienceMultiplier || 0) + (heroBonuses.scienceMultiplier || 0) + (factionPassives.scienceMultiplier || 0) + (weather.scienceMultiplier || 0) + (districtEffects.scienceMultiplier || 0);
+            jobMult.engineer += (policyEffects.energyMultiplier || 0) + (districtEffects.energyMultiplier || 0);
+            foodConsumptionMult += (policyEffects.foodConsumptionMultiplier || 0) + (weather.foodConsumptionMultiplier || 0) + (districtEffects.foodConsumptionMultiplier || 0);
 
             globalMult = Math.max(0.2, globalMult);
             Object.keys(jobMult).forEach(k => {
@@ -2348,13 +2586,19 @@
             Object.entries(factionPassives.resourcesPerTick || {}).forEach(([res, val]) => {
                 rates[res] += val;
             });
+            Object.entries(districtEffects.upkeepPerTick || {}).forEach(([res, amount]) => {
+                if (res === 'energy') return;
+                if (rates[res] == null) return;
+                rates[res] -= amount;
+            });
 
             // energy coverage affects global multiplier after base calculation
             // compute energy production and demand
             const energyProduction = rates.energy; // from engineers + buildings
             const buildingCount = Object.values(state.buildings).reduce((a, b) => a + b, 0);
             let energyDemand = state.population * 0.18 + buildingCount * 0.12; // simple heuristic
-            energyDemand *= 1 + (policyEffects.energyDemandMultiplier || 0) + (weather.energyDemandMultiplier || 0);
+            energyDemand *= 1 + (policyEffects.energyDemandMultiplier || 0) + (weather.energyDemandMultiplier || 0) + (districtEffects.energyDemandMultiplier || 0);
+            energyDemand += districtEffects.upkeepPerTick?.energy || 0;
             energyDemand = Math.max(0, energyDemand);
             let energyRatio = 1;
             if (energyDemand > 0) {
@@ -2604,6 +2848,7 @@
             if (!foodOk) happiness -= 0.25;
             if (!housingOk) happiness -= 0.2;
             happiness += getPolicyEffects().happinessFlat || 0;
+            happiness += getDistrictEffects().happinessFlat || 0;
             happiness += state.calendar?.weatherEffects?.happinessFlat || 0;
             // slight bonus from safe & well-run colony
             const { securityScore, politicsScore } = computeSecurityAndPolitics();
@@ -2873,6 +3118,71 @@
             });
         }
 
+        function renderDistricts() {
+            if (!el.districtsContainer) return;
+            ensureDistrictState();
+            const capacity = getDistrictCapacity();
+            const total = getTotalDistrictCount();
+            updateText(el.districtCapacity, `${total}/${capacity}`);
+            const districtEffects = getDistrictEffects();
+            const activeEffects = [];
+            if (districtEffects.foodMultiplier) activeEffects.push(`Food +${Math.round(districtEffects.foodMultiplier * 100)}%`);
+            if (districtEffects.woodMultiplier) activeEffects.push(`Wood +${Math.round(districtEffects.woodMultiplier * 100)}%`);
+            if (districtEffects.stoneMultiplier || districtEffects.metalMultiplier) activeEffects.push(`Mining +${Math.round((districtEffects.stoneMultiplier + districtEffects.metalMultiplier) * 50)}%`);
+            if (districtEffects.scienceMultiplier) activeEffects.push(`Science +${Math.round(districtEffects.scienceMultiplier * 100)}%`);
+            if (districtEffects.happinessFlat) activeEffects.push(`Happiness ${districtEffects.happinessFlat > 0 ? '+' : ''}${Math.round(districtEffects.happinessFlat * 100)}%`);
+            if (districtEffects.securityFlat) activeEffects.push(`Security +${fmt(districtEffects.securityFlat, 1)}`);
+            const upkeepText = Object.entries(districtEffects.upkeepPerTick || {})
+                .filter(([, amount]) => amount > 0)
+                .map(([res, amount]) => `${fmt(amount, 2)} ${res}`)
+                .join(', ');
+            if (upkeepText) activeEffects.push(`Upkeep ${upkeepText}/tick`);
+            updateText(el.districtEffectsHint, activeEffects.length ? activeEffects.join(' | ') : 'No district bonuses active yet.');
+
+            Object.values(DISTRICT_DEFS).forEach(def => {
+                const count = state.districts[def.id] || 0;
+                const countEl = document.getElementById(`districtCount-${def.id}`);
+                if (countEl) countEl.textContent = count.toString();
+
+                const setupCost = getDistrictSetupCost(def.id, count);
+                const costText = Object.entries(setupCost).map(([res, amt]) => `${fmt(amt, 0)} ${res}`).join(', ');
+                const upkeep = Object.entries(def.upkeepPerTick || {}).map(([res, amt]) => `${fmt(amt, 2)} ${res}`).join(', ');
+                const costEl = document.getElementById(`districtCost-${def.id}`);
+                if (costEl) {
+                    costEl.textContent = `Setup: ${costText || 'None'} | Upkeep: ${upkeep || 'None'}/tick`;
+                }
+
+                const metaEl = document.getElementById(`districtMeta-${def.id}`);
+                if (metaEl) {
+                    const adjacencyParts = (def.adjacencyBonuses || []).map(adj => {
+                        const buildings = state.buildings?.[adj.buildingId] || 0;
+                        const perDistrictBonus = Math.min(adj.maxBonus || 0, (adj.perBuilding || 0) * buildings);
+                        return `${adj.target.replace('Multiplier', '')} +${Math.round(perDistrictBonus * 100)}%/district`;
+                    });
+                    metaEl.textContent = adjacencyParts.length
+                        ? `Adjacency now: ${adjacencyParts.join(', ')}`
+                        : `Unlocks at colony level ${def.unlockAt}`;
+                }
+
+                const btn = document.getElementById(`districtBtn-${def.id}`);
+                if (!btn) return;
+                const unlocked = computeColonyLevel(state.population) >= def.unlockAt;
+                const affordable = canAfford(setupCost);
+                const hasCapacity = total < capacity;
+                btn.textContent = unlocked ? 'Establish' : `Locked (Lv ${def.unlockAt})`;
+                btn.disabled = !unlocked || !affordable || !hasCapacity;
+                if (btn.disabled) btn.classList.add('btn-disabled');
+                else btn.classList.remove('btn-disabled');
+                if (!hasCapacity && unlocked) {
+                    btn.title = 'District capacity reached';
+                } else if (!affordable && unlocked) {
+                    btn.title = 'Not enough resources';
+                } else {
+                    btn.title = '';
+                }
+            });
+        }
+
         function renderHero() {
             const hero = state.hero;
             const stats = getHeroStats();
@@ -2974,8 +3284,8 @@
         function renderRoadmap() {
             if (!el.roadmapContainer) return;
             el.roadmapContainer.innerHTML = '';
-            const topFive = FEATURE_ROADMAP.slice(0, 5);
-            const draftTen = FEATURE_ROADMAP.slice(5);
+            const shipped = FEATURE_ROADMAP.filter(f => !!f.shipped);
+            const draft = FEATURE_ROADMAP.filter(f => !f.shipped);
             const addGroup = (title, items) => {
                 const section = document.createElement('div');
                 section.className = 'border border-slate-800 rounded p-2 bg-slate-900/40';
@@ -2986,13 +3296,14 @@
                 items.forEach((feature, idx) => {
                     const row = document.createElement('div');
                     row.className = 'text-[0.65rem] text-slate-300 mb-1';
-                    row.textContent = `${idx + 1}. ${feature.name} [Weight ${feature.weight}] — ${feature.summary}`;
+                    const badge = feature.shipped ? '[Shipped]' : '[Draft]';
+                    row.textContent = `${idx + 1}. ${feature.name} ${badge} [Weight ${feature.weight}] — ${feature.summary}`;
                     section.appendChild(row);
                 });
                 el.roadmapContainer.appendChild(section);
             };
-            addGroup('Implemented Priorities (Top 5)', topFive);
-            addGroup('Draft Backlog (Next 10)', draftTen);
+            addGroup(`Implemented Priorities (${shipped.length})`, shipped);
+            addGroup(`Draft Backlog (${draft.length})`, draft);
         }
 
         function renderAll() {
@@ -3003,6 +3314,7 @@
             renderJobs();
             renderPrestige();
             renderPolicies();
+            renderDistricts();
             renderHero();
             renderFactions();
             renderExpeditions();
@@ -3043,6 +3355,11 @@
                 if (!state.activePolicies || typeof state.activePolicies !== 'object') state.activePolicies = { ...fresh.activePolicies };
                 Object.keys(fresh.activePolicies).forEach(id => {
                     if (state.activePolicies?.[id] == null) state.activePolicies[id] = false;
+                });
+                if (!state.districts || typeof state.districts !== 'object') state.districts = { ...fresh.districts };
+                Object.keys(fresh.districts).forEach(id => {
+                    const value = Number(state.districts?.[id]);
+                    state.districts[id] = Number.isFinite(value) ? Math.max(0, Math.floor(value)) : 0;
                 });
                 if (!state.calendar || typeof state.calendar !== 'object') state.calendar = { ...fresh.calendar };
                 if (state.calendar.year == null) state.calendar.year = 1;
@@ -3193,6 +3510,7 @@
             createBuildingRows();
             createResearchRows();
             createPrestigeRows();
+            createDistrictRows();
             createPolicyRows();
             createHeroControls();
             createFactionRows();
