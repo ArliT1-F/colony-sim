@@ -34,8 +34,13 @@ The game was expanded from a basic incremental colony simulator into a deeper si
    - Calendar with seasons and rotating weather profiles
    - Weather effects integrated into production, energy demand, and happiness
 
-6. **In-game weighted roadmap panel**
-   - 15 features total (top 5 implemented + 10 draft backlog)
+6. **District Zoning**
+   - New district panel with setup costs, unlock gates, and district-capacity limits
+   - District effects include per-tick upkeep plus adjacency/synergy bonuses that scale with buildings and complementary districts
+   - District output affects economy, security/politics, and happiness calculations
+
+7. **In-game weighted roadmap panel**
+   - 15 features total (top 6 implemented + 9 draft backlog)
 
 ## Additional balancing pass (latest)
 A follow-up balancing update was applied after initial implementation:
@@ -179,8 +184,8 @@ If new state keys are added later, mirror this migration pattern.
 - Expedition success intentionally avoids >90% or <10% to preserve uncertainty.
 
 ## Suggested next steps
-1. Add lightweight telemetry/debug panel (current multipliers, active policy/weather breakdown).
-2. Split systems into modules/files (`systems/*.js`) once feature scope grows further.
-3. Add automated sim tests (headless tick simulation) for balance regressions.
-4. Integrate the extra 5 newly proposed draft features into the roadmap UI if desired.
+1. Implement **Supply Chains** (the next roadmap feature) with intermediate goods and building consumption loops.
+2. Add lightweight telemetry/debug panel (current multipliers, active policy/weather/district breakdown).
+3. Split systems into modules/files (`systems/*.js`) once feature scope grows further.
+4. Add automated sim tests (headless tick simulation) for balance regressions.
 
