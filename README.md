@@ -85,9 +85,9 @@ This project is currently a single-file game (`index.html`) plus documentation/h
 
 ---
 
-## Draft Feature Backlog (all current drafts)
+## Draft Feature Backlog
 
-The current release slate tracks **16 planned features** total; **1 has shipped** (District Zoning) and **15 remain draft**.
+District Zoning has now moved from draft to shipped status; the remaining entries below represent the active draft backlog.
 
 ### Pair plan with weights, update name, and version
 
