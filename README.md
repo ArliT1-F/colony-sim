@@ -69,11 +69,23 @@ This project is currently a single-file game (`index.html`) plus documentation/h
 - Build infrastructure in **Buildings**
 - Unlock multipliers in **Research**
 - Establish specialized **Districts** for adjacency bonuses (with upkeep costs)
-- Use **Policies** for strategic tradeoffs (max 2 active)
+- Use **Policies** for strategic tradeoffs (cap scales with progression, max 2 active)
 - Grow your hero and run **Expeditions**
 - Build faction **Reputation** and trigger diplomacy actions
 - Manage **Energy** and **Food** to avoid efficiency loss/starvation
 - **Prestige** when threshold is met to gain long-term power
+
+### Keyboard / Mouse Shortcuts
+
+- `Space` — Pause / Resume simulation
+- `Ctrl/Cmd + S` — Save game
+- `1` / `2` / `3` / `4` / `5` — Set game speed (0.5×, 1×, 2×, 4×, 10×)
+- `Shift + Click` on Build — queue 5 of that building
+- `Shift + Alt + Click` on Build — queue as many as you can afford
+- `Right-Click` on Build — cancel the most recent queued build of that type and refund a portion
+- `Shift + Click` on job +/- — change job count by 5
+- `Shift + Alt + Click` on job + — assign all unassigned colonists to that job
+- `Shift + Alt + Click` on job - — clear that job entirely
 
 ---
 

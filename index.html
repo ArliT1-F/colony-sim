@@ -45,6 +45,54 @@
         .modal-backdrop {
             background: rgba(15, 23, 42, 0.9);
         }
+
+        .resource-warning {
+            box-shadow: inset 0 0 0 1px rgba(248, 113, 113, 0.55);
+            background: rgba(127, 29, 29, 0.18) !important;
+        }
+
+        .resource-caution {
+            box-shadow: inset 0 0 0 1px rgba(250, 204, 21, 0.45);
+        }
+
+        .policy-active {
+            background: rgba(16, 185, 129, 0.10) !important;
+            border-color: rgba(16, 185, 129, 0.55) !important;
+        }
+
+        .progress-bar-fill {
+            transition: width 200ms linear;
+        }
+
+        .pulse-warn {
+            animation: pulse-warn-anim 1.6s ease-in-out infinite;
+        }
+
+        @keyframes pulse-warn-anim {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.55; }
+        }
+
+        button:not(:disabled):not(.btn-disabled):hover {
+            filter: brightness(1.15);
+        }
+
+        button:not(:disabled):not(.btn-disabled):active {
+            transform: translateY(1px);
+        }
+
+        .log-panel p:nth-child(odd) {
+            background: rgba(255, 255, 255, 0.015);
+        }
+
+        .log-panel::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .log-panel::-webkit-scrollbar-thumb {
+            background: rgba(148, 163, 184, 0.25);
+            border-radius: 3px;
+        }
     </style>
 </head>
 
@@ -58,14 +106,16 @@
                     <p class="text-xs text-slate-400">Grow a fledgling settlement into a civilization-spanning capital.
                     </p>
                 </div>
-                <div class="flex gap-2 text-xs">
-                    <button id="tutorialBtn"
+                <div class="flex gap-2 text-xs items-center flex-wrap">
+                    <button id="pauseBtn" title="Pause/Resume the simulation (Space)"
+                        class="px-3 py-1 rounded border border-amber-700 text-amber-200 bg-amber-950 hover:bg-amber-900 transition">Pause</button>
+                    <button id="tutorialBtn" title="Open the new colony tutorial"
                         class="px-3 py-1 rounded border border-sky-700 text-sky-200 bg-sky-950 hover:bg-sky-900 transition">Tutorial</button>
-                    <button id="saveBtn"
+                    <button id="saveBtn" title="Save game (Ctrl+S)"
                         class="px-3 py-1 rounded border border-slate-700 bg-slate-900 hover:bg-slate-800 transition">Save</button>
-                    <button id="loadBtn"
+                    <button id="loadBtn" title="Load last save"
                         class="px-3 py-1 rounded border border-emerald-700 text-emerald-300 bg-emerald-950 hover:bg-emerald-900 transition">Load</button>
-                    <button id="resetBtn"
+                    <button id="resetBtn" title="Reset colony but keep prestige progress"
                         class="px-3 py-1 rounded border border-rose-700 text-rose-300 bg-rose-950 hover:bg-rose-900 transition">Reset</button>
                 </div>
             </div>
@@ -79,7 +129,7 @@
                 <div class="md:col-span-2 border border-slate-800 rounded-lg bg-slate-950/70 p-3">
                     <h2 class="text-sm font-semibold text-slate-200 mb-2">Resources</h2>
                     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 text-xs">
-                        <div class="border border-slate-800 rounded p-2 bg-slate-900/60">
+                        <div id="resCard-food" class="border border-slate-800 rounded p-2 bg-slate-900/60">
                             <div class="flex justify-between items-baseline">
                                 <span class="text-slate-300">Food</span>
                                 <span id="food" class="font-mono">0</span>
@@ -89,7 +139,7 @@
                                 <span id="foodRate" class="font-mono">+0</span>
                             </div>
                         </div>
-                        <div class="border border-slate-800 rounded p-2 bg-slate-900/60">
+                        <div id="resCard-wood" class="border border-slate-800 rounded p-2 bg-slate-900/60">
                             <div class="flex justify-between items-baseline">
                                 <span class="text-slate-300">Wood</span>
                                 <span id="wood" class="font-mono">0</span>
@@ -99,7 +149,7 @@
                                 <span id="woodRate" class="font-mono">+0</span>
                             </div>
                         </div>
-                        <div class="border border-slate-800 rounded p-2 bg-slate-900/60">
+                        <div id="resCard-stone" class="border border-slate-800 rounded p-2 bg-slate-900/60">
                             <div class="flex justify-between items-baseline">
                                 <span class="text-slate-300">Stone</span>
                                 <span id="stone" class="font-mono">0</span>
@@ -109,7 +159,7 @@
                                 <span id="stoneRate" class="font-mono">+0</span>
                             </div>
                         </div>
-                        <div class="border border-slate-800 rounded p-2 bg-slate-900/60">
+                        <div id="resCard-metal" class="border border-slate-800 rounded p-2 bg-slate-900/60">
                             <div class="flex justify-between items-baseline">
                                 <span class="text-slate-300">Metal</span>
                                 <span id="metal" class="font-mono">0</span>
@@ -119,7 +169,7 @@
                                 <span id="metalRate" class="font-mono">+0</span>
                             </div>
                         </div>
-                        <div class="border border-slate-800 rounded p-2 bg-slate-900/60">
+                        <div id="resCard-science" class="border border-slate-800 rounded p-2 bg-slate-900/60">
                             <div class="flex justify-between items-baseline">
                                 <span class="text-slate-300">Science</span>
                                 <span id="science" class="font-mono">0</span>
@@ -129,7 +179,7 @@
                                 <span id="scienceRate" class="font-mono">+0</span>
                             </div>
                         </div>
-                        <div class="border border-slate-800 rounded p-2 bg-slate-900/60">
+                        <div id="resCard-energy" class="border border-slate-800 rounded p-2 bg-slate-900/60">
                             <div class="flex justify-between items-baseline">
                                 <span class="text-slate-300">Energy</span>
                                 <span id="energy" class="font-mono">0</span>
@@ -222,7 +272,10 @@
             <section class="grid md:grid-cols-3 gap-4 text-xs">
                 <!-- Policies -->
                 <div class="border border-slate-800 rounded-lg bg-slate-950/70 p-3 flex flex-col gap-2">
-                    <h2 class="text-sm font-semibold text-slate-200 mb-1">Colony Policies</h2>
+                    <div class="flex items-center justify-between gap-2">
+                        <h2 class="text-sm font-semibold text-slate-200">Colony Policies</h2>
+                        <span id="policiesActiveCount" class="text-[0.65rem] text-slate-400 font-mono">0/1 active</span>
+                    </div>
                     <p class="text-[0.7rem] text-slate-400">Choose active laws to shape your economy, society, and
                         security posture.</p>
                     <div id="policiesContainer" class="flex flex-col gap-2"></div>
@@ -238,6 +291,9 @@
                     <div class="text-[0.65rem] text-slate-400 flex justify-between">
                         <span>XP</span>
                         <span class="font-mono" id="heroXp">0 / 100</span>
+                    </div>
+                    <div class="h-1.5 w-full rounded progress-bar-bg overflow-hidden">
+                        <div id="heroXpBar" class="h-full progress-bar-fill" style="width: 0%"></div>
                     </div>
                     <div class="text-[0.65rem] text-slate-400 flex justify-between">
                         <span>Stats</span>
@@ -314,9 +370,11 @@
                         <span class="text-slate-300">Game Speed</span>
                         <select id="speedSelect"
                             class="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-[0.7rem]">
+                            <option value="2000">0.5× (2s/tick)</option>
                             <option value="1000">1× (1s/tick)</option>
                             <option value="500">2× (0.5s/tick)</option>
                             <option value="250">4× (0.25s/tick)</option>
+                            <option value="100">10× (0.1s/tick)</option>
                         </select>
                     </div>
                     <div class="flex items-center justify-between">
@@ -326,6 +384,10 @@
                     <div class="flex items-center justify-between">
                         <span class="text-slate-300">Ticks Played</span>
                         <span id="ticks" class="font-mono">0</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-slate-300">Time Played</span>
+                        <span id="timePlayed" class="font-mono text-[0.7rem]">0s</span>
                     </div>
                     <div class="mt-2 border-t border-slate-800 pt-2 text-[0.7rem] text-slate-400">
                         <p><span class="font-semibold text-slate-200">Energy load:</span> <span
@@ -829,7 +891,7 @@
                 baseCost: { wood: 85, stone: 30 },
                 costScale: 1.22,
                 upkeepPerTick: { energy: 0.45 },
-                effectsPerDistrict: { foodMultiplier: 0.13, happinessFlat: 0.012, maxBonus: 0.12 },
+                effectsPerDistrict: { foodMultiplier: 0.13, happinessFlat: 0.012 },
                 adjacencyBonuses: [
                     { buildingId: 'farm', target: 'foodMultiplier', perBuilding: 0.012, maxBonus: 0.12 },
                 ],
@@ -1079,6 +1141,14 @@
             { name: 'Ecology & Pollution', weight: 4, shipped: false, summary: 'Industrial growth creates environmental debt that must be mitigated.' },
         ];
         const POLICY_BASE_SLOTS = 1;
+        const MAX_ACTIVE_POLICIES = 2;
+
+        function getPolicySlotCount() {
+            const colonyLevel = computeColonyLevel(state.population);
+            const civicBonus = state.research?.civicPlanning ? 1 : 0;
+            const townHallBonus = (state.buildings?.townHall || 0) >= 1 ? 1 : 0;
+            return Math.min(MAX_ACTIVE_POLICIES, POLICY_BASE_SLOTS + (colonyLevel >= 4 ? 1 : 0) + civicBonus + townHallBonus);
+        }
 
         function createDefaultHero() {
             return {
@@ -1162,11 +1232,27 @@
                 launchedExpedition: false,
             },
             victoryAchieved: false,
+            _prestigeHousingBonus: 0,
         });
 
         let state = DEFAULT_STATE();
         let tickIntervalId = null;
         let autosaveIntervalId = null;
+        let isPaused = false;
+        let _rateCache = null;
+        let _rateCacheTick = -1;
+
+        function invalidateRateCache() {
+            _rateCache = null;
+            _rateCacheTick = -1;
+        }
+
+        function getRates() {
+            if (_rateCache && _rateCacheTick === state.ticks) return _rateCache;
+            _rateCache = computeRates();
+            _rateCacheTick = state.ticks;
+            return _rateCache;
+        }
 
         // --------- DOM Cache ---------
         const el = {};
@@ -1193,6 +1279,7 @@
             el.statusMessage = document.getElementById('statusMessage');
             el.ticks = document.getElementById('ticks');
             el.energyStatus = document.getElementById('energyStatus');
+            el.timePlayed = document.getElementById('timePlayed');
             el.worldYear = document.getElementById('worldYear');
             el.seasonName = document.getElementById('seasonName');
             el.weatherName = document.getElementById('weatherName');
@@ -1201,6 +1288,8 @@
             el.buildingsContainer = document.getElementById('buildingsContainer');
             el.researchContainer = document.getElementById('researchContainer');
             el.policiesContainer = document.getElementById('policiesContainer');
+            el.policiesActiveCount = document.getElementById('policiesActiveCount');
+            el.pauseBtn = document.getElementById('pauseBtn');
             el.districtsContainer = document.getElementById('districtsContainer');
             el.districtCapacity = document.getElementById('districtCapacity');
             el.districtEffectsHint = document.getElementById('districtEffectsHint');
@@ -1214,6 +1303,7 @@
             el.heroStats = document.getElementById('heroStats');
             el.heroStatus = document.getElementById('heroStatus');
             el.heroPerkPoints = document.getElementById('heroPerkPoints');
+            el.heroXpBar = document.getElementById('heroXpBar');
             el.heroGearButtons = document.getElementById('heroGearButtons');
             el.heroPerkButtons = document.getElementById('heroPerkButtons');
 
@@ -1250,6 +1340,40 @@
         }
 
         // --------- Helpers ---------
+        const EFFECT_KEY_LABELS = {
+            foodMultiplier: 'Food',
+            woodMultiplier: 'Wood',
+            stoneMultiplier: 'Stone',
+            metalMultiplier: 'Metal',
+            scienceMultiplier: 'Science',
+            energyMultiplier: 'Energy',
+            globalMultiplier: 'All Output',
+            foodConsumptionMultiplier: 'Food Use',
+            energyDemandMultiplier: 'Energy Use',
+            happinessFlat: 'Happiness',
+            securityFlat: 'Security',
+            politicsFlat: 'Politics',
+            guardMultiplier: 'Guards',
+            repGainMultiplier: 'Rep Gain',
+        };
+
+        function formatEffectsBrief(effects) {
+            if (!effects) return '';
+            const parts = [];
+            Object.entries(effects).forEach(([k, v]) => {
+                if (v === 0) return;
+                const label = EFFECT_KEY_LABELS[k] || k;
+                if (k === 'happinessFlat') {
+                    parts.push(`${label} ${v > 0 ? '+' : ''}${Math.round(v * 100)}%`);
+                } else if (k === 'securityFlat' || k === 'politicsFlat') {
+                    parts.push(`${label} ${v > 0 ? '+' : ''}${v}`);
+                } else {
+                    parts.push(`${label} ${v > 0 ? '+' : ''}${Math.round(v * 100)}%`);
+                }
+            });
+            return parts.join(' · ');
+        }
+
         function fmt(num, decimals = 1) {
             if (Math.abs(num) < 1000) return num.toFixed(decimals).replace(/\.0+$/, '');
             const units = ['k', 'M', 'B', 'T'];
@@ -1275,12 +1399,18 @@
         function addLog(message) {
             const time = new Date().toLocaleTimeString();
             const entry = `[${time}] ${message}`;
+            if (!Array.isArray(state.lastLogEntries)) state.lastLogEntries = [];
             state.lastLogEntries.push(entry);
-            if (state.lastLogEntries.length > 120) state.lastLogEntries.shift();
-            const p = document.createElement('p');
-            p.textContent = entry;
-            el.log.appendChild(p);
-            el.log.scrollTop = el.log.scrollHeight;
+            if (state.lastLogEntries.length > 200) state.lastLogEntries.shift();
+            if (el && el.log) {
+                const p = document.createElement('p');
+                p.textContent = entry;
+                el.log.appendChild(p);
+                while (el.log.childNodes.length > 200) {
+                    el.log.removeChild(el.log.firstChild);
+                }
+                el.log.scrollTop = el.log.scrollHeight;
+            }
         }
 
         function updateText(node, value, clsPositiveNegative = false) {
@@ -1296,35 +1426,29 @@
         }
 
         function isTutorialStepDone(step) {
-            switch (step.id) {
-                case 'overview':
-                    return true;
-                case 'jobs':
-                    return (state.jobs.farmer || 0) >= 2;
-                case 'build':
-                    return (state.buildings.tent || 0) >= 1;
-                case 'research':
-                    return !!state.research.improvedTools;
-                case 'policies':
-                    return Object.values(state.activePolicies || {}).some(Boolean);
-                case 'expedition':
-                    return !!state.activeExpedition || state.hero.level > 1 || state.ticks > 220;
-                case 'prestige':
-                    return canPrestigeNow();
-                default:
-                    return false;
+            if (!step) return false;
+            if (step.autoComplete) return true;
+            try {
+                return !!(typeof step.check === 'function' && step.check());
+            } catch (e) {
+                return false;
             }
         }
 
         function ensureTutorialState() {
             if (!state.tutorial || typeof state.tutorial !== 'object') {
-                state.tutorial = { enabled: true, stepIndex: 0, completed: false };
+                state.tutorial = { enabled: true, stepIndex: 0, completed: false, dismissed: false, launchedExpedition: false, version: TUTORIAL_VERSION };
+            }
+            if (typeof state.tutorial.step === 'number' && state.tutorial.stepIndex == null) {
+                state.tutorial.stepIndex = state.tutorial.step;
             }
             if (state.tutorial.enabled == null) state.tutorial.enabled = true;
             if (state.tutorial.stepIndex == null) state.tutorial.stepIndex = 0;
             if (state.tutorial.completed == null) state.tutorial.completed = false;
+            if (state.tutorial.dismissed == null) state.tutorial.dismissed = false;
+            if (state.tutorial.launchedExpedition == null) state.tutorial.launchedExpedition = false;
             if (state.tutorial.stepIndex < 0) state.tutorial.stepIndex = 0;
-            if (state.tutorial.stepIndex >= TUTORIAL_STEPS.length) {
+            if (typeof TUTORIAL_STEPS !== 'undefined' && state.tutorial.stepIndex >= TUTORIAL_STEPS.length) {
                 state.tutorial.stepIndex = TUTORIAL_STEPS.length - 1;
             }
         }
@@ -1552,7 +1676,7 @@
         }
 
         function ensureDistrictState() {
-            if (!state.districts || typeof state.districts !== 'objects') {
+            if (!state.districts || typeof state.districts !== 'object') {
                 state.districts = Object.fromEntries(Object.keys(DISTRICT_DEFS).map(id => [id, 0]));
             }
             Object.keys(DISTRICT_DEFS).forEach(id => {
@@ -1676,7 +1800,12 @@
                 const minus = document.createElement('button');
                 minus.textContent = '-';
                 minus.className = 'w-6 h-6 rounded border border-slate-700 bg-slate-900 hover:bg-slate-800';
-                minus.addEventListener('click', () => changeJob(job.id, -1));
+                minus.title = 'Click: -1. Shift+Click: -5. Shift+Alt+Click: remove all from this job.';
+                minus.addEventListener('click', (ev) => {
+                    if (ev.shiftKey && ev.altKey) changeJob(job.id, -(state.jobs[job.id] || 0));
+                    else if (ev.shiftKey) changeJob(job.id, -5);
+                    else changeJob(job.id, -1);
+                });
                 const count = document.createElement('span');
                 count.id = `job-${job.id}`;
                 count.className = 'w-8 text-center font-mono';
@@ -1684,7 +1813,12 @@
                 const plus = document.createElement('button');
                 plus.textContent = '+';
                 plus.className = 'w-6 h-6 rounded border border-slate-700 bg-slate-900 hover:bg-slate-800';
-                plus.addEventListener('click', () => changeJob(job.id, +1));
+                plus.title = 'Click: +1. Shift+Click: +5. Shift+Alt+Click: assign all unassigned to this job.';
+                plus.addEventListener('click', (ev) => {
+                    if (ev.shiftKey && ev.altKey) changeJob(job.id, getUnassigned());
+                    else if (ev.shiftKey) changeJob(job.id, +5);
+                    else changeJob(job.id, +1);
+                });
 
                 controls.appendChild(minus);
                 controls.appendChild(count);
@@ -1740,8 +1874,17 @@
                 const buildBtn = document.createElement('button');
                 buildBtn.textContent = 'Build';
                 buildBtn.className = 'px-2 py-1 rounded border border-slate-700 bg-slate-900 hover:bg-slate-800';
-                buildBtn.addEventListener('click', () => build(b.id));
+                buildBtn.addEventListener('click', (ev) => {
+                    if (ev.shiftKey && ev.altKey) build(b.id, 'max');
+                    else if (ev.shiftKey) build(b.id, 5);
+                    else build(b.id, 1);
+                });
                 buildBtn.id = `buildBtn-${b.id}`;
+                buildBtn.title = 'Click to build 1. Shift+Click: queue 5. Shift+Alt+Click: queue as many as affordable. Right-click: cancel last queued of this type and refund.';
+                buildBtn.addEventListener('contextmenu', (ev) => {
+                    ev.preventDefault();
+                    cancelLastConstruction(b.id);
+                });
                 right.appendChild(count);
                 right.appendChild(buildBtn);
 
@@ -1870,7 +2013,8 @@
             el.policiesContainer.innerHTML = '';
             Object.values(POLICY_DEFS).forEach(policy => {
                 const row = document.createElement('div');
-                row.className = 'border border-slate-800 rounded px-2 py-2 bg-slate-900/60 flex flex-col gap-1';
+                row.id = `policyRow-${policy.id}`;
+                row.className = 'border border-slate-800 rounded px-2 py-2 bg-slate-900/60 flex flex-col gap-1 transition';
 
                 const top = document.createElement('div');
                 top.className = 'flex justify-between items-center gap-2';
@@ -1892,6 +2036,11 @@
                 top.appendChild(left);
                 top.appendChild(btn);
                 row.appendChild(top);
+
+                const effectsLine = document.createElement('div');
+                effectsLine.className = 'text-[0.6rem] text-slate-400';
+                effectsLine.textContent = formatEffectsBrief(policy.effects);
+                row.appendChild(effectsLine);
 
                 const line = document.createElement('div');
                 line.className = 'text-[0.62rem] text-slate-500';
@@ -2101,8 +2250,19 @@
             const def = POLICY_DEFS[id];
             if (!def) return;
             if (computeColonyLevel(state.population) < def.unlockAt) return;
-            state.activePolicies[id] = !state.activePolicies[id];
+            const isActive = !!state.activePolicies[id];
+            if (!isActive) {
+                const activeCount = Object.values(state.activePolicies || {}).filter(Boolean).length;
+                if (activeCount >= getPolicySlotCount()) {
+                    state.statusMessage = 'Active policy slots are full. Deactivate one first.';
+                    addLog('Cannot enact more policies — active slots full.');
+                    renderPolicies();
+                    return;
+                }
+            }
+            state.activePolicies[id] = !isActive;
             addLog(`${def.name} ${state.activePolicies[id] ? 'enacted' : 'repealed'}.`);
+            invalidateRateCache();
             renderPolicies();
             renderResourcesAndRates();
         }
@@ -2342,12 +2502,21 @@
 
         function changeJob(id, delta) {
             const current = state.jobs[id] || 0;
-            if (delta > 0 && getUnassigned() <= 0) return;
-            if (delta < 0 && current <= 0) return;
+            if (delta === 0) return;
+            if (delta > 0) {
+                const free = getUnassigned();
+                if (free <= 0) return;
+                delta = Math.min(delta, free);
+            } else {
+                delta = -Math.min(-delta, current);
+                if (delta === 0) return;
+            }
             state.jobs[id] = current + delta;
+            invalidateRateCache();
             const span = document.getElementById(`job-${id}`);
             if (span) span.textContent = state.jobs[id];
             renderOverview();
+            renderResourcesAndRates();
         }
 
         function calculateBuildTimeTicks(buildingId) {
@@ -2364,22 +2533,35 @@
             return Math.ceil(time);
         }
 
-        function build(id) {
+        function build(id, requested = 1) {
             const bDef = BUILDING_DEFS[id];
-            const completedCount = state.buildings[id] || 0;
-            const cost = getBuildingCost(id, completedCount + buildingUnderConstructionCount(id));
+            if (!bDef) return;
             const colonyLevel = computeColonyLevel(state.population);
             const requiredPrestige = bDef.requiresPrestige || 0;
             if (colonyLevel < bDef.unlockAt) return;
             if (state.prestigeCount < requiredPrestige) return;
-            if (!canAfford(cost)) return;
 
-            payCost(cost);
-            const buildTime = calculateBuildTimeTicks(id);
-            state.constructionQueue.push({ id, remaining: buildTime, total: buildTime });
-            addLog(`Started constructing ${bDef.name} (takes ${buildTime} ticks).`);
-            renderBuildings();
-            renderResourcesAndRates();
+            const maxQueue = requested === 'max' ? 50 : Math.max(1, parseInt(requested, 10) || 1);
+            let queued = 0;
+            while (queued < maxQueue) {
+                const completedCount = state.buildings[id] || 0;
+                const inQueue = buildingUnderConstructionCount(id);
+                const cost = getBuildingCost(id, completedCount + inQueue);
+                if (!canAfford(cost)) break;
+                payCost(cost);
+                const buildTime = calculateBuildTimeTicks(id);
+                state.constructionQueue.push({ id, remaining: buildTime, total: buildTime });
+                queued++;
+                if (requested !== 'max' && queued >= maxQueue) break;
+            }
+            if (queued > 0) {
+                addLog(queued === 1
+                    ? `Started constructing ${bDef.name}.`
+                    : `Queued ${queued} × ${bDef.name}.`);
+                invalidateRateCache();
+                renderBuildings();
+                renderResourcesAndRates();
+            }
         }
 
         function finishConstruction(job) {
@@ -2387,6 +2569,29 @@
             state.buildings[job.id] = (state.buildings[job.id] || 0) + 1;
             applyBuildingEffects();
             addLog(`Construction completed: ${def.name}.`);
+        }
+
+        function cancelLastConstruction(id) {
+            const queue = state.constructionQueue;
+            for (let i = queue.length - 1; i >= 0; i--) {
+                if (queue[i].id !== id) continue;
+                const job = queue.splice(i, 1)[0];
+                const def = BUILDING_DEFS[id];
+                if (!def) return;
+                const completedCount = state.buildings[id] || 0;
+                const otherInQueue = buildingUnderConstructionCount(id);
+                const refundCost = getBuildingCost(id, completedCount + otherInQueue);
+                const refundFactor = job.remaining / Math.max(1, job.total);
+                Object.entries(refundCost).forEach(([res, amt]) => {
+                    state.resources[res] = (state.resources[res] || 0) + Math.floor(amt * (0.5 + 0.5 * refundFactor));
+                });
+                state.statusMessage = `Cancelled queued ${def.name}. Partial refund issued.`;
+                addLog(`Cancelled queued ${def.name}; partial refund of materials issued.`);
+                invalidateRateCache();
+                renderBuildings();
+                renderResourcesAndRates();
+                return;
+            }
         }
 
         function processConstructionQueue() {
@@ -2434,7 +2639,8 @@
                 if (eff.housingMultiplier) housingMult += eff.housingMultiplier;
             });
 
-            state.populationCap = Math.max(4, Math.floor(baseHousingCap * housingMult));
+            const prestigeBonus = state._prestigeHousingBonus || 0;
+            state.populationCap = Math.max(4, Math.floor(baseHousingCap * housingMult) + prestigeBonus);
         }
 
         function computeSecurityAndPolitics() {
@@ -2587,7 +2793,7 @@
             Object.entries(districtEffects.upkeepPerTick || {}).forEach(([res, amount]) => {
                 if (res === 'energy') return;
                 if (rates[res] == null) return;
-                rates[res] -=amount;
+                rates[res] -= amount;
             });
 
             // energy coverage affects global multiplier after base calculation
@@ -2810,7 +3016,8 @@
             // construction
             processConstructionQueue();
 
-            const { rates } = computeRates();
+            invalidateRateCache();
+            const { rates } = getRates();
 
             // apply resources
             Object.entries(rates).forEach(([res, delta]) => {
@@ -2918,18 +3125,19 @@
             state.prestigeUpgrades = oldMeta.prestigeUpgrades;
             state.hero = oldMeta.hero;
 
-            applyPrestigeStartBonuses();
+            applyPrestigeStartBonuses({ grantPopulation: true });
             applyBuildingEffects();
+            invalidateRateCache();
             el.log.innerHTML = '';
             addLog(`You move your people to a new settlement, carrying ${gained} prestige point(s) of hard-won experience.`);
             renderAll();
         }
 
-        function applyPrestigeStartBonuses() {
+        function applyPrestigeStartBonuses({ grantPopulation = false } = {}) {
             const spLv = state.prestigeUpgrades.seasonedPioneers || 0;
-            if (spLv > 0) {
+            state._prestigeHousingBonus = 4 * spLv;
+            if (grantPopulation && spLv > 0) {
                 state.population += 2 * spLv;
-                state.populationCap += 4 * spLv;
             }
         }
 
@@ -2948,7 +3156,7 @@
 
         // --------- Rendering ---------
         function renderResourcesAndRates() {
-            const { rates } = computeRates();
+            const { rates } = getRates();
             updateText(el.food, fmt(state.resources.food, 1));
             updateText(el.wood, fmt(state.resources.wood, 1));
             updateText(el.stone, fmt(state.resources.stone, 1));
@@ -2964,6 +3172,33 @@
             updateText(el.energyRate, `${rates.energy >= 0 ? '+' : ''}${fmt(rates.energy, 2)}`, true);
 
             updateText(el.energyStatus, state._cachedEnergyStatusText || 'Stable');
+
+            const foodCard = document.getElementById('resCard-food');
+            if (foodCard) {
+                const danger = rates.food < 0 && state.resources.food < 30;
+                const caution = rates.food < 0 && !danger;
+                foodCard.classList.toggle('resource-warning', danger);
+                foodCard.classList.toggle('resource-caution', caution);
+                foodCard.classList.toggle('pulse-warn', danger && state.resources.food < 10);
+            }
+            const energyCard = document.getElementById('resCard-energy');
+            if (energyCard) {
+                const txt = state._cachedEnergyStatusText || '';
+                const danger = txt === 'Critical shortage';
+                const caution = txt === 'Underpowered';
+                energyCard.classList.toggle('resource-warning', danger);
+                energyCard.classList.toggle('resource-caution', caution);
+            }
+        }
+
+        function formatPlayTime(ticks, msPerTick) {
+            const totalSeconds = Math.floor((ticks * (msPerTick || TICK_DEFAULT_MS)) / 1000);
+            if (totalSeconds < 60) return `${totalSeconds}s`;
+            const m = Math.floor(totalSeconds / 60);
+            const s = totalSeconds % 60;
+            if (m < 60) return `${m}m ${s}s`;
+            const h = Math.floor(m / 60);
+            return `${h}h ${m % 60}m`;
         }
 
         function renderOverview() {
@@ -2972,6 +3207,11 @@
             updateText(el.unassigned, getUnassigned().toString());
             const happinessPct = Math.round(state.happiness * 100);
             updateText(el.happiness, happinessPct + '%');
+            if (el.happiness) {
+                el.happiness.classList.remove('resource-positive', 'resource-negative');
+                if (happinessPct >= 90) el.happiness.classList.add('resource-positive');
+                else if (happinessPct < 50) el.happiness.classList.add('resource-negative');
+            }
             updateText(el.colonyLevel, computeColonyLevel(state.population).toString());
             updateText(el.statusMessage, state.statusMessage || '');
             updateText(el.ticks, state.ticks.toString());
@@ -2979,6 +3219,7 @@
             updateText(el.worldYear, (state.calendar?.year || 1).toString());
             updateText(el.seasonName, getSeasonName());
             updateText(el.weatherName, state.calendar?.weatherName || 'Clear');
+            updateText(el.timePlayed, formatPlayTime(state.ticks, state.tickMs));
         }
 
         function renderBuildings() {
@@ -3099,86 +3340,97 @@
         }
 
         function renderPolicies() {
+            const activeCount = Object.values(state.activePolicies || {}).filter(Boolean).length;
+            const slotCount = getPolicySlotCount();
+            if (el.policiesActiveCount) {
+                updateText(el.policiesActiveCount, `${activeCount}/${slotCount} active`);
+            }
             Object.values(POLICY_DEFS).forEach(policy => {
                 const btn = document.getElementById(`policyBtn-${policy.id}`);
+                const row = document.getElementById(`policyRow-${policy.id}`);
+                const active = !!state.activePolicies[policy.id];
+                if (row) row.classList.toggle('policy-active', active);
                 if (!btn) return;
                 const unlocked = computeColonyLevel(state.population) >= policy.unlockAt;
                 if (!unlocked) {
                     btn.textContent = `Locked (Lv ${policy.unlockAt})`;
                     btn.disabled = true;
                     btn.classList.add('btn-disabled');
+                    btn.title = `Reach colony level ${policy.unlockAt} to unlock.`;
                     return;
                 }
-                const active = !!state.activePolicies[policy.id];
-                btn.textContent = active ? 'Deactivate Policy' : 'Activate Policy';
-                btn.disabled = false;
-                btn.classList.remove('btn-disabled');
+                const atCap = !active && activeCount >= slotCount;
+                btn.textContent = active ? 'Deactivate Policy' : (atCap ? 'No Slots Available' : 'Activate Policy');
+                btn.disabled = atCap;
+                if (btn.disabled) btn.classList.add('btn-disabled');
+                else btn.classList.remove('btn-disabled');
+                btn.title = atCap ? `Active policy slots full (${activeCount}/${slotCount}). Deactivate one first.` : '';
             });
+        }
 
-            function renderDistricts() {
-                if (!el.districtsContainer) return;
-                ensureDistrictState();
-                const capacity = getDistrictCapacity();
-                const total = getTotalDistrictCount();
-                updateText(el.districtCapacity, `${total}/${capacity}`);
-                const districtEffects = getDistrictEffects();
-                const activeEffects = [];
-                if (districtEffects.foodMultiplier) activeEffects.push(`Food +${Math.round(districtEffects.foodMultiplier * 100)}%`);
-                if (districtEffects.woodMultiplier) activeEffects.push(`Wood +${Math.round(districtEffects.woodMultiplier * 100)}%`);
-                if (districtEffects.stoneMultiplier || districtEffects.metalMultiplier) activeEffects.push(`Mining +${Math.round((districtEffects.stoneMultiplier + districtEffects.metalMultiplier) * 50)}%`);
-                if (districtEffects.scienceMultiplier) activeEffects.push(`Science +${Math.round(districtEffects.scienceMultiplier * 100)}%`);
-                if (districtEffects.happinessFlat) activeEffects.push(`Happiness ${districtEffects.happinessFlat > 0 ? '+' : ''}${Math.round(districtEffects.happinessFlat * 100)}%`);
-                if (districtEffects.securityFlat) activeEffects.push(`Security +${fmt(districtEffects.securityFlat, 1)}`);
-                const upkeepText = Object.entries(districtEffects.upkeepPerTick || {})
-                    .filter(([, amount]) => amount > 0)
-                    .map(([res, amount]) => `${fmt(amount, 2)} ${res}`)
-                    .join(', ');
-                if (upkeepText) activeEffects.push(`Upkeep ${upkeepText}/tick`);
-                updateText(el.districtEffectsHint, activeEffects.length ? activeEffects.join(' | ') : 'No district bonuses active yet.');
+        function renderDistricts() {
+            if (!el.districtsContainer) return;
+            ensureDistrictState();
+            const capacity = getDistrictCapacity();
+            const total = getTotalDistrictCount();
+            updateText(el.districtCapacity, `${total}/${capacity}`);
+            const districtEffects = getDistrictEffects();
+            const activeEffects = [];
+            if (districtEffects.foodMultiplier) activeEffects.push(`Food +${Math.round(districtEffects.foodMultiplier * 100)}%`);
+            if (districtEffects.woodMultiplier) activeEffects.push(`Wood +${Math.round(districtEffects.woodMultiplier * 100)}%`);
+            if (districtEffects.stoneMultiplier || districtEffects.metalMultiplier) activeEffects.push(`Mining +${Math.round((districtEffects.stoneMultiplier + districtEffects.metalMultiplier) * 50)}%`);
+            if (districtEffects.scienceMultiplier) activeEffects.push(`Science +${Math.round(districtEffects.scienceMultiplier * 100)}%`);
+            if (districtEffects.happinessFlat) activeEffects.push(`Happiness ${districtEffects.happinessFlat > 0 ? '+' : ''}${Math.round(districtEffects.happinessFlat * 100)}%`);
+            if (districtEffects.securityFlat) activeEffects.push(`Security +${fmt(districtEffects.securityFlat, 1)}`);
+            const upkeepText = Object.entries(districtEffects.upkeepPerTick || {})
+                .filter(([, amount]) => amount > 0)
+                .map(([res, amount]) => `${fmt(amount, 2)} ${res}`)
+                .join(', ');
+            if (upkeepText) activeEffects.push(`Upkeep ${upkeepText}/tick`);
+            updateText(el.districtEffectsHint, activeEffects.length ? activeEffects.join(' | ') : 'No district bonuses active yet.');
 
-                Object.values(DISTRICT_DEFS).forEach(def => {
-                    const count = state.districts[def.id] || 0;
-                    const countEl = document.getElementById(`districtCount-${def.id}`);
-                    if (countEl) countEl.textContent = count.toString();
+            Object.values(DISTRICT_DEFS).forEach(def => {
+                const count = state.districts[def.id] || 0;
+                const countEl = document.getElementById(`districtCount-${def.id}`);
+                if (countEl) countEl.textContent = count.toString();
 
-                    const setupCost = getDistrictSetupCost(def.id, count);
-                    const costText = Object.entries(setupCost).map(([res, amt]) => `${fmt(amt, 0)} ${res}`).join(', ');
-                    const upkeep = Object.entries(def.upkeepPerTick || {}).map(([res, amt]) => `${fmt(amt, 2)} ${res}`).join(', ');
-                    const costEl = document.getElementById(`districtCost-${def.id}`);
-                    if (costEl) {
-                        costEl.textContent = `Setup: ${costText || 'None'} | Upkeep: ${upkeep || 'None'}/tick`;
-                    }
+                const setupCost = getDistrictSetupCost(def.id, count);
+                const costText = Object.entries(setupCost).map(([res, amt]) => `${fmt(amt, 0)} ${res}`).join(', ');
+                const upkeep = Object.entries(def.upkeepPerTick || {}).map(([res, amt]) => `${fmt(amt, 2)} ${res}`).join(', ');
+                const costEl = document.getElementById(`districtCost-${def.id}`);
+                if (costEl) {
+                    costEl.textContent = `Setup: ${costText || 'None'} | Upkeep: ${upkeep || 'None'}/tick`;
+                }
 
-                    const metaEl = document.getElementById(`districtMeta-${def.id}`);
-                    if (metaEl) {
-                        const adjacencyParts = (def.adjacencyBonuses || []).map(adj => {
-                            const buildings = state.buildings?.[adj.buildingId] || 0;
-                            const perDistrictBonus = Math.min(adj.maxBonus || 0, (adj.perBuilding || 0) * buildings);
-                            return `${adj.target.replace('Multiplier', '')} +${Math.round(perDistrictBonus * 100)}%/district`;
-                        });
-                        metaEl.textContent = adjacencyParts.length
-                            ? `Adjacency now: ${adjacencyParts.join(', ')}`
-                            : `Unlocks at colony level ${def.unlockAt}`;
-                    }
+                const metaEl = document.getElementById(`districtMeta-${def.id}`);
+                if (metaEl) {
+                    const adjacencyParts = (def.adjacencyBonuses || []).map(adj => {
+                        const buildings = state.buildings?.[adj.buildingId] || 0;
+                        const perDistrictBonus = Math.min(adj.maxBonus || 0, (adj.perBuilding || 0) * buildings);
+                        return `${adj.target.replace('Multiplier', '')} +${Math.round(perDistrictBonus * 100)}%/district`;
+                    });
+                    metaEl.textContent = adjacencyParts.length
+                        ? `Adjacency now: ${adjacencyParts.join(', ')}`
+                        : `Unlocks at colony level ${def.unlockAt}`;
+                }
 
-                    const btn = document.getElementById(`districtBtn-${def.id}`);
-                    if (!btn) return;
-                    const unlocked = computeColonyLevel(state.population) >= def.unlockAt;
-                    const affordable = canAfford(setupCost);
-                    const hasCapacity = total < capacity;
-                    btn.textContent = unlocked ? 'Establish' : `Locked (Lv ${def.unlockAt})`;
-                    btn.disabled = !unlocked || !affordable || !hasCapacity;
-                    if (btn.disabled) btn.classList.add('btn-disabled');
-                    else btn.classList.remove('btn-disabled');
-                    if (!hasCapacity && unlocked) {
-                        btn.title = 'District capacity reached';
-                    } else if (!affordable && unlocked) {
-                        btn.title = 'Not enough resources';
-                    } else {
-                        btn.title = '';
-                    }
-                });
-            }
+                const btn = document.getElementById(`districtBtn-${def.id}`);
+                if (!btn) return;
+                const unlocked = computeColonyLevel(state.population) >= def.unlockAt;
+                const affordable = canAfford(setupCost);
+                const hasCapacity = total < capacity;
+                btn.textContent = unlocked ? 'Establish' : `Locked (Lv ${def.unlockAt})`;
+                btn.disabled = !unlocked || !affordable || !hasCapacity;
+                if (btn.disabled) btn.classList.add('btn-disabled');
+                else btn.classList.remove('btn-disabled');
+                if (!hasCapacity && unlocked) {
+                    btn.title = 'District capacity reached';
+                } else if (!affordable && unlocked) {
+                    btn.title = 'Not enough resources';
+                } else {
+                    btn.title = '';
+                }
+            });
         }
 
         function renderHero() {
@@ -3187,6 +3439,10 @@
             updateText(el.heroIdentity, `${hero.name} the ${hero.title}`);
             updateText(el.heroLevel, `Lv ${hero.level}`);
             updateText(el.heroXp, `${fmt(hero.xp, 0)} / ${fmt(hero.xpToNext, 0)}`);
+            if (el.heroXpBar) {
+                const pct = Math.max(0, Math.min(100, (hero.xp / Math.max(1, hero.xpToNext)) * 100));
+                el.heroXpBar.style.width = pct.toFixed(1) + '%';
+            }
             updateText(el.heroStats, `ATK ${fmt(stats.attack, 0)} DEF ${fmt(stats.defense, 0)} INT ${fmt(stats.intellect, 0)}`);
             updateText(el.heroPerkPoints, hero.perkPoints.toString());
             const heroReady = !state.activeExpedition && state.ticks >= hero.cooldownUntilTick;
@@ -3279,8 +3535,10 @@
             updateText(el.expeditionOutcomeHint, `Projected success: ${Math.round(active.successChance * 100)}%`);
         }
 
+        let _roadmapRendered = false;
         function renderRoadmap() {
-            if (!el.roadmapContainer) return;
+            if (!el.roadmapContainer || _roadmapRendered) return;
+            _roadmapRendered = true;
             el.roadmapContainer.innerHTML = '';
             const shipped = FEATURE_ROADMAP.filter(f => !!f.shipped);
             const draft = FEATURE_ROADMAP.filter(f => !f.shipped);
@@ -3324,11 +3582,16 @@
         // --------- Save / Load / Reset ---------
         function saveGame() {
             try {
-                const data = JSON.stringify(state);
+                const data = JSON.stringify(state, (key, value) => {
+                    if (key.startsWith('_cached')) return undefined;
+                    return value;
+                });
                 localStorage.setItem(SAVE_KEY, data);
                 addLog('Game saved.');
             } catch (e) {
                 console.error('Save failed', e);
+                state.statusMessage = 'Save failed (storage full or unavailable).';
+                addLog('Save failed.');
             }
         }
 
@@ -3339,24 +3602,32 @@
                 const loaded = JSON.parse(data);
                 if (!loaded || typeof loaded !== 'object') return false;
                 const fresh = DEFAULT_STATE();
+                const freshBuildings = { ...fresh.buildings };
+                const freshResearch = { ...fresh.research };
+                const freshPrestige = { ...fresh.prestigeUpgrades };
+                const freshPolicies = { ...fresh.activePolicies };
+                const freshDistricts = { ...fresh.districts };
                 state = Object.assign(fresh, loaded);
-                // ensure new keys
-                Object.keys(fresh.buildings).forEach(id => {
+
+                state.buildings = state.buildings && typeof state.buildings === 'object' ? state.buildings : {};
+                Object.keys(freshBuildings).forEach(id => {
                     if (state.buildings[id] == null) state.buildings[id] = 0;
                 });
-                Object.keys(fresh.research).forEach(id => {
+                state.research = state.research && typeof state.research === 'object' ? state.research : {};
+                Object.keys(freshResearch).forEach(id => {
                     if (state.research[id] == null) state.research[id] = false;
                 });
-                Object.keys(fresh.prestigeUpgrades).forEach(id => {
+                state.prestigeUpgrades = state.prestigeUpgrades && typeof state.prestigeUpgrades === 'object' ? state.prestigeUpgrades : {};
+                Object.keys(freshPrestige).forEach(id => {
                     if (state.prestigeUpgrades[id] == null) state.prestigeUpgrades[id] = 0;
                 });
-                if (!state.activePolicies || typeof state.activePolicies !== 'object') state.activePolicies = { ...fresh.activePolicies };
-                Object.keys(fresh.activePolicies).forEach(id => {
-                    if (state.activePolicies?.[id] == null) state.activePolicies[id] = false;
+                if (!state.activePolicies || typeof state.activePolicies !== 'object') state.activePolicies = { ...freshPolicies };
+                Object.keys(freshPolicies).forEach(id => {
+                    if (state.activePolicies[id] == null) state.activePolicies[id] = false;
                 });
-                if (!state.districts || typeof state.districts !== 'object') state.districts = { ...fresh.districts };
-                Object.keys(fresh.districts).forEach(id => {
-                    const value = Number(state.districts?.[id]);
+                if (!state.districts || typeof state.districts !== 'object') state.districts = { ...freshDistricts };
+                Object.keys(freshDistricts).forEach(id => {
+                    const value = Number(state.districts[id]);
                     state.districts[id] = Number.isFinite(value) ? Math.max(0, Math.floor(value)) : 0;
                 });
 
@@ -3402,7 +3673,19 @@
                 if (state.totalPrestigePoints == null) state.totalPrestigePoints = 0;
                 if (state.prestigeCount == null) state.prestigeCount = 0;
                 if (state.victoryAchieved == null) state.victoryAchieved = false;
+                if (!Array.isArray(state.lastLogEntries)) state.lastLogEntries = [];
+                applyPrestigeStartBonuses();
                 applyBuildingEffects();
+                invalidateRateCache();
+                if (el.log) {
+                    el.log.innerHTML = '';
+                    state.lastLogEntries.forEach(entry => {
+                        const p = document.createElement('p');
+                        p.textContent = entry;
+                        el.log.appendChild(p);
+                    });
+                    el.log.scrollTop = el.log.scrollHeight;
+                }
                 addLog('Loaded saved game.');
                 renderAll();
                 return true;
@@ -3412,19 +3695,61 @@
             }
         }
 
-        function resetGame() {
+        function resetGame(keepPrestige = true) {
+            const preserved = keepPrestige ? {
+                prestigePoints: state.prestigePoints || 0,
+                totalPrestigePoints: state.totalPrestigePoints || 0,
+                prestigeCount: state.prestigeCount || 0,
+                prestigeUpgrades: { ...(state.prestigeUpgrades || {}) },
+            } : null;
             state = DEFAULT_STATE();
-            applyPrestigeStartBonuses();
+            if (preserved) {
+                state.prestigePoints = preserved.prestigePoints;
+                state.totalPrestigePoints = preserved.totalPrestigePoints;
+                state.prestigeCount = preserved.prestigeCount;
+                state.prestigeUpgrades = preserved.prestigeUpgrades;
+            }
+            applyPrestigeStartBonuses({ grantPopulation: true });
             applyBuildingEffects();
+            invalidateRateCache();
             el.log.innerHTML = '';
-            addLog('Game reset. A new colony begins.');
+            addLog(keepPrestige ? 'Colony reset. Prestige progress preserved.' : 'Full reset: a new colony begins from scratch.');
             renderAll();
+        }
+
+        function hardResetGame() {
+            try { localStorage.removeItem(SAVE_KEY); } catch (e) { /* ignore */ }
+            resetGame(false);
         }
 
         // --------- Loop & Init ---------
         function startTickLoop() {
             if (tickIntervalId) clearInterval(tickIntervalId);
+            if (isPaused) return;
             tickIntervalId = setInterval(gameTick, state.tickMs || TICK_DEFAULT_MS);
+        }
+
+        function togglePause() {
+            isPaused = !isPaused;
+            if (isPaused) {
+                if (tickIntervalId) clearInterval(tickIntervalId);
+                tickIntervalId = null;
+                state.statusMessage = 'Simulation paused.';
+                addLog('Simulation paused.');
+            } else {
+                state.statusMessage = 'Simulation resumed.';
+                addLog('Simulation resumed.');
+                startTickLoop();
+            }
+            updatePauseButtonUi();
+        }
+
+        function updatePauseButtonUi() {
+            if (!el.pauseBtn) return;
+            el.pauseBtn.textContent = isPaused ? 'Resume' : 'Pause';
+            el.pauseBtn.classList.toggle('bg-emerald-900', isPaused);
+            el.pauseBtn.classList.toggle('border-emerald-600', isPaused);
+            el.pauseBtn.classList.toggle('text-emerald-200', isPaused);
         }
 
         function startAutosave() {
@@ -3448,7 +3773,28 @@
                 if (!loadGame()) addLog('No valid save found.');
             });
             el.resetBtn.addEventListener('click', () => {
-                if (confirm('Reset colony (but keep prestige) and start over?')) resetGame();
+                if (confirm('Reset colony (but keep prestige) and start over?')) resetGame(true);
+            });
+            if (el.pauseBtn) {
+                el.pauseBtn.addEventListener('click', togglePause);
+            }
+            window.addEventListener('keydown', (e) => {
+                if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA')) return;
+                if (e.code === 'Space' && !e.ctrlKey && !e.metaKey) {
+                    e.preventDefault();
+                    togglePause();
+                } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+                    e.preventDefault();
+                    saveGame();
+                } else if (e.key === '1' || e.key === '2' || e.key === '3' || e.key === '4' || e.key === '5') {
+                    const map = { '1': 2000, '2': 1000, '3': 500, '4': 250, '5': 100 };
+                    const ms = map[e.key];
+                    if (ms) {
+                        state.tickMs = ms;
+                        if (el.speedSelect) el.speedSelect.value = String(ms);
+                        startTickLoop();
+                    }
+                }
             });
             el.clearLogBtn.addEventListener('click', () => {
                 el.log.innerHTML = '';
@@ -3459,6 +3805,7 @@
                 state.tickMs = ms;
                 startTickLoop();
             });
+            el.speedSelect.value = String(state.tickMs || TICK_DEFAULT_MS);
             if (el.tutorialBtn) {
                 el.tutorialBtn.addEventListener('click', () => {
                     reopenTutorial();
@@ -3520,7 +3867,9 @@
             applyPrestigeStartBonuses();
             applyBuildingEffects();
             initUIEvents();
+            updatePauseButtonUi();
             addLog('Colony established. Use your starting food to survive and expand.');
+            addLog('Tip: Space pauses, 1-5 set speed, Ctrl+S saves. Shift-click jobs/build to act in 5s.');
             addLog('Long-term goal: complete all research, construct a Capital Megastructure, reach 1000+ population and at least 5 prestiges.');
             renderAll();
             startTickLoop();
