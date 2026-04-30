@@ -31,9 +31,11 @@ This project is currently a single-file game (`index.html`) plus documentation/h
 3. **Expedition Quest Board**
 4. **Policy / Law System**
 5. **Season + Weather Simulation**
+6. **District Zoning**
 
 ### UI Additions (implemented)
 - Policy panel
+- District zoning panel
 - Hero command panel
 - Faction diplomacy panel
 - Expedition board + active expedition progress
@@ -66,6 +68,7 @@ This project is currently a single-file game (`index.html`) plus documentation/h
 - Assign colonists in **Jobs**
 - Build infrastructure in **Buildings**
 - Unlock multipliers in **Research**
+- Establish specialized **Districts** for adjacency bonuses (with upkeep costs)
 - Use **Policies** for strategic tradeoffs (max 2 active)
 - Grow your hero and run **Expeditions**
 - Build faction **Reputation** and trigger diplomacy actions
@@ -77,14 +80,14 @@ This project is currently a single-file game (`index.html`) plus documentation/h
 ## Save / Load
 
 - Save key is browser `localStorage`-based
-- Includes migration guards for new state fields (hero, factions, calendar, policies, expedition, buffs)
+- Includes migration guards for new state fields (hero, factions, calendar, policies, districts,  expedition, buffs)
 - If balancing is changed heavily, older saves still attempt compatibility via default-field hydration
 
 ---
 
 ## Draft Feature Backlog (all current drafts)
 
-The project currently has **16 draft features** (10 original draft backlog + 5 additional draft ideas + 1 balancing/ops draft) grouped below into **pairs of 2**.
+District Zoning has now moved from draft to shipped status; the remaining entries below represent the active draft backlog.
 
 ### Pair plan with weights, update name, and version
 
@@ -93,7 +96,7 @@ The project currently has **16 draft features** (10 original draft backlog + 5 a
 | Pair | Features (2) | Pair Weight | Update Name | Version |
 |---|---|---:|---|---|
 | 0 | Game Tutorial for new players *(shipped)* | 16 | **Back to School** | `v0.8.9` |
-| 1 | District Zoning + Supply Chains | 14 | **Steel & Streets** | `v0.9.0` |
+| 1 | District Zoning + Supply Chains *(shipped)* | 14 | **Steel & Streets** | `v0.9.0` |
 | 2 | Character Traits for Colonists + Guilds & Internal Politics | 12 | **Faces of the City** | `v0.9.1` |
 | 3 | Espionage Layer + Crisis Council | 11 | **Shadows & Sirens** | `v0.9.2` |
 | 4 | City Projects + Great Wonders & National Legacies | 10 | **Monuments of Power** | `v0.9.3` |
@@ -102,8 +105,7 @@ The project currently has **16 draft features** (10 original draft backlog + 5 a
 | 7 | Lineage / Dynasty System + Religion / Culture / Ideology Blocs | 11 | **Blood and Belief** | `v0.9.6` |
 | 8 | Infrastructure Wear & Maintenance + Telemetry & Balance Dashboard | 10 | **Stress Test** | `v0.9.7` |
 
-### Draft feature weights (reference)
-- District Zoning (7)
+### Draft feature weights (remaining)
 - Supply Chains (7)
 - Character Traits for Colonists (6)
 - Guilds & Internal Politics (6)
