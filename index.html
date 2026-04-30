@@ -292,6 +292,9 @@
                         <span>XP</span>
                         <span class="font-mono" id="heroXp">0 / 100</span>
                     </div>
+                    <div class="h-1.5 w-full rounded progress-bar-bg overflow-hidden">
+                        <div id="heroXpBar" class="h-full progress-bar-fill" style="width: 0%"></div>
+                    </div>
                     <div class="text-[0.65rem] text-slate-400 flex justify-between">
                         <span>Stats</span>
                         <span class="font-mono" id="heroStats">ATK 0 DEF 0 INT 0</span>
@@ -381,6 +384,10 @@
                     <div class="flex items-center justify-between">
                         <span class="text-slate-300">Ticks Played</span>
                         <span id="ticks" class="font-mono">0</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-slate-300">Time Played</span>
+                        <span id="timePlayed" class="font-mono text-[0.7rem]">0s</span>
                     </div>
                     <div class="mt-2 border-t border-slate-800 pt-2 text-[0.7rem] text-slate-400">
                         <p><span class="font-semibold text-slate-200">Energy load:</span> <span
@@ -1272,6 +1279,7 @@
             el.statusMessage = document.getElementById('statusMessage');
             el.ticks = document.getElementById('ticks');
             el.energyStatus = document.getElementById('energyStatus');
+            el.timePlayed = document.getElementById('timePlayed');
             el.worldYear = document.getElementById('worldYear');
             el.seasonName = document.getElementById('seasonName');
             el.weatherName = document.getElementById('weatherName');
@@ -1295,6 +1303,7 @@
             el.heroStats = document.getElementById('heroStats');
             el.heroStatus = document.getElementById('heroStatus');
             el.heroPerkPoints = document.getElementById('heroPerkPoints');
+            el.heroXpBar = document.getElementById('heroXpBar');
             el.heroGearButtons = document.getElementById('heroGearButtons');
             el.heroPerkButtons = document.getElementById('heroPerkButtons');
 
@@ -1390,12 +1399,18 @@
         function addLog(message) {
             const time = new Date().toLocaleTimeString();
             const entry = `[${time}] ${message}`;
+            if (!Array.isArray(state.lastLogEntries)) state.lastLogEntries = [];
             state.lastLogEntries.push(entry);
-            if (state.lastLogEntries.length > 120) state.lastLogEntries.shift();
-            const p = document.createElement('p');
-            p.textContent = entry;
-            el.log.appendChild(p);
-            el.log.scrollTop = el.log.scrollHeight;
+            if (state.lastLogEntries.length > 200) state.lastLogEntries.shift();
+            if (el && el.log) {
+                const p = document.createElement('p');
+                p.textContent = entry;
+                el.log.appendChild(p);
+                while (el.log.childNodes.length > 200) {
+                    el.log.removeChild(el.log.firstChild);
+                }
+                el.log.scrollTop = el.log.scrollHeight;
+            }
         }
 
         function updateText(node, value, clsPositiveNegative = false) {
@@ -3176,12 +3191,27 @@
             }
         }
 
+        function formatPlayTime(ticks, msPerTick) {
+            const totalSeconds = Math.floor((ticks * (msPerTick || TICK_DEFAULT_MS)) / 1000);
+            if (totalSeconds < 60) return `${totalSeconds}s`;
+            const m = Math.floor(totalSeconds / 60);
+            const s = totalSeconds % 60;
+            if (m < 60) return `${m}m ${s}s`;
+            const h = Math.floor(m / 60);
+            return `${h}h ${m % 60}m`;
+        }
+
         function renderOverview() {
             updateText(el.population, state.population.toString());
             updateText(el.populationCap, state.populationCap.toString());
             updateText(el.unassigned, getUnassigned().toString());
             const happinessPct = Math.round(state.happiness * 100);
             updateText(el.happiness, happinessPct + '%');
+            if (el.happiness) {
+                el.happiness.classList.remove('resource-positive', 'resource-negative');
+                if (happinessPct >= 90) el.happiness.classList.add('resource-positive');
+                else if (happinessPct < 50) el.happiness.classList.add('resource-negative');
+            }
             updateText(el.colonyLevel, computeColonyLevel(state.population).toString());
             updateText(el.statusMessage, state.statusMessage || '');
             updateText(el.ticks, state.ticks.toString());
@@ -3189,6 +3219,7 @@
             updateText(el.worldYear, (state.calendar?.year || 1).toString());
             updateText(el.seasonName, getSeasonName());
             updateText(el.weatherName, state.calendar?.weatherName || 'Clear');
+            updateText(el.timePlayed, formatPlayTime(state.ticks, state.tickMs));
         }
 
         function renderBuildings() {
@@ -3408,6 +3439,10 @@
             updateText(el.heroIdentity, `${hero.name} the ${hero.title}`);
             updateText(el.heroLevel, `Lv ${hero.level}`);
             updateText(el.heroXp, `${fmt(hero.xp, 0)} / ${fmt(hero.xpToNext, 0)}`);
+            if (el.heroXpBar) {
+                const pct = Math.max(0, Math.min(100, (hero.xp / Math.max(1, hero.xpToNext)) * 100));
+                el.heroXpBar.style.width = pct.toFixed(1) + '%';
+            }
             updateText(el.heroStats, `ATK ${fmt(stats.attack, 0)} DEF ${fmt(stats.defense, 0)} INT ${fmt(stats.intellect, 0)}`);
             updateText(el.heroPerkPoints, hero.perkPoints.toString());
             const heroReady = !state.activeExpedition && state.ticks >= hero.cooldownUntilTick;
@@ -3500,8 +3535,10 @@
             updateText(el.expeditionOutcomeHint, `Projected success: ${Math.round(active.successChance * 100)}%`);
         }
 
+        let _roadmapRendered = false;
         function renderRoadmap() {
-            if (!el.roadmapContainer) return;
+            if (!el.roadmapContainer || _roadmapRendered) return;
+            _roadmapRendered = true;
             el.roadmapContainer.innerHTML = '';
             const shipped = FEATURE_ROADMAP.filter(f => !!f.shipped);
             const draft = FEATURE_ROADMAP.filter(f => !f.shipped);
